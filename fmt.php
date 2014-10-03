@@ -26,6 +26,7 @@ file_put_contents($file, $content);
 ///////// Functions
 
 function fmt($content) {
+	$doWhile = FALSE;
 	$expectIf = FALSE;
 	$braceOnNextLine = FALSE;
 	$searchingFunction = FALSE;
@@ -96,17 +97,22 @@ function fmt($content) {
 		} elseif (preg_match('/^true|false|null$/i', $value)) {
 			$value = strtoupper($value);
 
-		} elseif (in_array($name, [T_IF, T_ELSEIF, T_ELSE, T_SWITCH, T_WHILE, T_FOR, T_FOREACH, T_TRY, T_CATCH])) {
+		} elseif (in_array($name, [T_IF, T_ELSEIF, T_ELSE, T_SWITCH, T_DO, T_WHILE, T_FOR, T_FOREACH, T_TRY, T_CATCH])) {
 			$indent = getIndent($output->getValue());
 			$writeSpace = TRUE;
 
-			if ($name === T_TRY || $name === T_ELSE) {
+			if ($name === T_DO) {
+				$doWhile = TRUE;
+				$expectBrace = TRUE;
+			} elseif ($name === T_TRY || $name === T_ELSE) {
 				$expectBrace = TRUE;
 				$name === T_ELSE && $expectIf = TRUE;
-			} else {
+			} elseif (!$doWhile) {
 				$catchParenthesis = TRUE;
 			}
-			in_array($name, [T_CATCH, T_ELSEIF, T_ELSE]) && sanitizePreviousWhitespace($output);
+			if (in_array($name, [T_CATCH, T_ELSEIF, T_ELSE]) || $name === T_WHILE && $doWhile) {
+				sanitizePreviousWhitespace($output);
+			}
 
 		} elseif ($catchParenthesis) {
 			if ($value === '(') {
