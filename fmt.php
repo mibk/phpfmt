@@ -66,16 +66,19 @@ function fmt($content) {
 			if ($value !== '{') {
 				$output->push(NULL, '{');
 				$output->push(T_WHITESPACE, PHP_EOL."$indent\t");
-				$braceAfterSemicolon = TRUE;
+
+				if ($value === ';') {
+					list($name, $value) = finishBraceBlock($output, $indent);
+				} else {
+					$braceAfterSemicolon = TRUE;
+				}
 			}
 
 		} elseif ($value === ';') {
 			if ($braceAfterSemicolon) {
 				$braceAfterSemicolon = FALSE;
 				$output->push($name, $value);
-				$output->push(T_WHITESPACE, "\n$indent");
-				$name = NULL;
-				$value = '}';
+				list($name, $value) = finishBraceBlock($output, $indent);
 			}
 			$searchingFunction = FALSE;
 
@@ -133,6 +136,11 @@ function sanitizePreviousWhitespace(Output $output, $value = ' ') {
 	} else {
 		$output->push(T_WHITESPACE, $value);
 	}
+}
+
+function finishBraceBlock(Output $output, $indent) {
+	$output->push(T_WHITESPACE, PHP_EOL."$indent");
+	return [NULL, '}'];
 }
 
 function removeEmptyLines($content) {
