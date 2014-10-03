@@ -16,7 +16,8 @@ if ($file === NULL) {
 $content = file_get_contents($file);
 
 $content = fmt($content);
-$content = convertSpacesToTabs($content);
+// Dokud to nebude fungovat pořádně
+// $content = convertSpacesToTabs($content);
 $content = removeTrailingWhitespace($content);
 $content = ensureTrailingEol($content);
 
@@ -25,6 +26,7 @@ file_put_contents($file, $content);
 ///////// Functions
 
 function fmt($content) {
+	$expectIf = FALSE;
 	$braceOnNextLine = FALSE;
 	$searchingFunction = FALSE;
 	$writeSpace = FALSE;
@@ -62,15 +64,24 @@ function fmt($content) {
 
 		} elseif ($expectBrace) {
 			$expectBrace = FALSE;
-			sanitizePreviousWhitespace($output);
-			if ($value !== '{') {
-				$output->push(NULL, '{');
-				$output->push(T_WHITESPACE, PHP_EOL."$indent\t");
+			if ($expectIf && $name === T_IF) {
+				$output->delete();
+				$output->delete();
+				$name = T_ELSEIF;
+				$value = 'elseif';
+				$catchParenthesis = TRUE;
+				$writeSpace = TRUE;
+			} else {
+				sanitizePreviousWhitespace($output);
+				if ($value !== '{') {
+					$output->push(NULL, '{');
+					$output->push(T_WHITESPACE, PHP_EOL."$indent\t");
 
-				if ($value === ';') {
-					list($name, $value) = finishBraceBlock($output, $indent);
-				} else {
-					$braceAfterSemicolon = TRUE;
+					if ($value === ';') {
+						list($name, $value) = finishBraceBlock($output, $indent);
+					} else {
+						$braceAfterSemicolon = TRUE;
+					}
 				}
 			}
 
@@ -89,8 +100,9 @@ function fmt($content) {
 			$indent = getIndent($output->getValue());
 			$writeSpace = TRUE;
 
-			if ($name === T_TRY || $name == T_ELSE) {
+			if ($name === T_TRY || $name === T_ELSE) {
 				$expectBrace = TRUE;
+				$name === T_ELSE && $expectIf = TRUE;
 			} else {
 				$catchParenthesis = TRUE;
 			}
@@ -202,6 +214,11 @@ class Output
 			return NULL;
 		}
 		return $i;
+	}
+
+	public function delete($stepsBack = 0) {
+		$i = $this->getIndex($stepsBack);
+		array_splice($this->array, $i, 1);
 	}
 
 	public function getLastNewLineWhitespace()
