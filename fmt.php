@@ -102,11 +102,11 @@ function fmt($content) {
 			}
 
 		} elseif (in_array($name, [T_PUBLIC, T_PROTECTED, T_PRIVATE])) {
-			$indent = getIndent($output->getValue());
+			$indent = getIndent($output->getLastNewLineWhitespace());
 			$searchingFunction = TRUE;
 
 		} elseif ($name === T_CLASS || $name === T_FUNCTION && $searchingFunction) {
-			$name === T_CLASS && $indent = getIndent($output->getValue());
+			$name === T_CLASS && $indent = getIndent($output->getLastNewLineWhitespace());
 			$braceOnNextLine = TRUE;
 			$searchingFunction = FALSE;
 
@@ -194,6 +194,16 @@ class Output
 			return NULL;
 		}
 		return $i;
+	}
+
+	public function getLastNewLineWhitespace()
+	{
+		foreach (array_reverse($this->array) as $token) {
+			if ($token[0] === T_WHITESPACE && strpos($token[1], "\n") !== FALSE) {
+				return $token[1];
+			}
+		}
+		return NULL;
 	}
 
 	public function __tostring()
