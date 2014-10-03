@@ -110,7 +110,10 @@ function fmt($content) {
 			} elseif (!$doWhile) {
 				$catchParenthesis = TRUE;
 			}
-			if (in_array($name, [T_CATCH, T_ELSEIF, T_ELSE]) || $name === T_WHILE && $doWhile) {
+			if (
+				$output->getName(1) !== T_COMMENT
+				&& (in_array($name, [T_CATCH, T_ELSEIF, T_ELSE]) || $name === T_WHILE && $doWhile)
+			) {
 				sanitizePreviousWhitespace($output);
 			}
 
