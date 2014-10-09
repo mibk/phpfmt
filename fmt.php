@@ -56,7 +56,7 @@ function fmt($content) {
 		}
 
 		if ($name === T_WHITESPACE) {
-			if ($output->getName() === T_COMMENT) {
+			if (isOneLineComment($output->getName(), $output->getValue())) {
 				$output->setValue(rtrim($output->getValue()));
 				$value = PHP_EOL.$value;
 			}
@@ -179,6 +179,10 @@ function ensureTrailingEol($content) {
 	return rtrim($content).PHP_EOL;
 }
 
+function isOneLineComment($name, $value) {
+	return $name === T_COMMENT && strpos($value, '/*') !== 0;
+}
+
 
 class Output
 {
@@ -260,7 +264,7 @@ function convertSpacesToTabs($content, $tabWidth = 4) {
 	$eol = FALSE;
 	foreach ($tokens as $token) {
 		list($name, $value) = sanitizeToken($token);
-		if ($name === T_COMMENT) {
+		if (isOneLineComment($name, $value)) {
 			$value = rtrim($value, "\r\n");
 			$eol && $value = PHP_EOL.$value;
 			$eol = TRUE;
