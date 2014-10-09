@@ -16,8 +16,7 @@ if ($file === NULL) {
 $content = file_get_contents($file);
 
 $content = fmt($content);
-// Dokud to nebude fungovat pořádně
-// $content = convertSpacesToTabs($content);
+$content = convertSpacesToTabs($content);
 $content = removeTrailingWhitespace($content);
 $content = ensureTrailingEol($content);
 
@@ -40,7 +39,7 @@ function fmt($content) {
 	$tokens = token_get_all($content);
 	for ($i = 0; $i < count($tokens); $i++) {
 		$t = $tokens[$i];
-		list($name, $value) = is_array($t) ? $t : [NULL, $t];
+		list($name, $value) = sanitizeToken($t);
 
 		if ($writeSpace) {
 			$writeSpace = FALSE;
@@ -144,6 +143,10 @@ function fmt($content) {
 	}
 
 	return (string) $output;
+}
+
+function sanitizeToken($token) {
+	return is_array($token) ? $token : [NULL, $token];
 }
 
 function getIndent($whitespace) {
@@ -251,11 +254,33 @@ class Output
 }
 
 function convertSpacesToTabs($content, $tabWidth = 4) {
-	return preg_replace_callback('/^[ \t]+/m', function ($m) use ($tabWidth) {
-		$chars = count_chars($m[0]);
-		$tabs = $chars[9];
-		$spaces = $chars[32];
-		$tabs += floor($spaces/$tabWidth);
-		return str_repeat("\t", $tabs).str_repeat(' ', $spaces % $tabWidth);
-	}, $content);
+	$tokens = token_get_all($content);
+
+	$values = [];
+	$eol = FALSE;
+	foreach ($tokens as $token) {
+		list($name, $value) = sanitizeToken($token);
+		if ($name === T_COMMENT) {
+			$value = rtrim($value, "\r\n");
+			$eol && $value = PHP_EOL.$value;
+			$eol = TRUE;
+		} elseif ($name === T_WHITESPACE) {
+			if ($eol) {
+				$value = PHP_EOL.$value;
+				$eol = FALSE;
+			}
+			$value = preg_replace_callback('/^\n[ \t]+/m', function ($m) use ($tabWidth) {
+				$chars = count_chars($m[0]);
+				$tabs = $chars[9];
+				$spaces = $chars[32];
+				$tabs += floor($spaces/$tabWidth);
+				return "\n".str_repeat("\t", $tabs).str_repeat(' ', $spaces % $tabWidth);
+			}, $value);
+		} elseif ($eol) {
+			$values[] = PHP_EOL;
+			$eol = FALSE;
+		}
+		$values[] = $value;
+	}
+	return implode('', $values);
 }
