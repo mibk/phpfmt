@@ -101,7 +101,7 @@ function fmt($content) {
 			}
 			$searchingFunction = FALSE;
 
-		} elseif (preg_match('/^true|false|null$/i', $value)) {
+		} elseif ($name === T_STRING && preg_match('/^(?:true|false|null)$/i', $value)) {
 			$value = strtoupper($value);
 
 		} elseif (in_array($name, [T_IF, T_ELSEIF, T_ELSE, T_SWITCH, T_DO, T_WHILE, T_FOR, T_FOREACH, T_TRY, T_CATCH])) {
