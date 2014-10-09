@@ -85,6 +85,9 @@ function fmt($content) {
 				}
 			}
 
+		} elseif (isOneLineComment($name, $value)) {
+			$value = preg_replace('#^//\s*#', '// ', $value);
+
 		} elseif ($value === ';') {
 			if ($braceAfterSemicolon) {
 				$braceAfterSemicolon = FALSE;
