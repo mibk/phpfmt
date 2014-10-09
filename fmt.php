@@ -1,28 +1,33 @@
 <?php
 
-$file = @$_SERVER['argv'][1];
-
 // 1. normalizovat if/elseif/else/try/catch/while/for/foreach
 // 2. odstranit prázdné řádky na 1 prázdný řádek
 // 3. true, false, null -- velké
 // 4. odstranit trailing whitespace
 // 5. trailing newline on EOF
 
-if ($file === NULL) {
+$options = getopt('f:h');
+
+if (isset($options['h'])) {
 	echo "Usage: php fmt.php <filename>\n";
 	exit(1);
 }
 
-$content = file_get_contents($file);
+$file = FALSE;
+if (isset($options['f'])) {
+	$file = $options['f'];
+}
+
+$content = file_get_contents($file ?: 'php://stdin');
 
 $content = fmt($content);
 $content = convertSpacesToTabs($content);
 $content = removeTrailingWhitespace($content);
 $content = ensureTrailingEol($content);
 
-file_put_contents($file, $content);
+file_put_contents($file ?: 'php://stdout', $content);
 
-///////// Functions
+// Functions
 
 function fmt($content) {
 	$doWhile = FALSE;
@@ -141,7 +146,6 @@ function fmt($content) {
 			sanitizePreviousWhitespace($output, PHP_EOL."$indent");
 		}
 
-
 		$output->push($name, $value);
 	}
 
@@ -186,7 +190,6 @@ function isOneLineComment($name, $value) {
 	return $name === T_COMMENT && strpos($value, '/*') !== 0;
 }
 
-
 class Output
 {
 	private $array = [];
@@ -220,14 +223,16 @@ class Output
 		$this->array[$index][1] = $value;
 	}
 
-	private function get($stepsBack) {
+	private function get($stepsBack)
+	{
 		if (($i = $this->getIndex($stepsBack)) === NULL) {
 			return NULL;
 		}
 		return $this->array[$i];
 	}
 
-	private function getIndex($stepsBack) {
+	private function getIndex($stepsBack)
+	{
 		$i = count($this->array) - $stepsBack - 1;
 		if ($i < 0) {
 			return NULL;
@@ -235,7 +240,8 @@ class Output
 		return $i;
 	}
 
-	public function delete($stepsBack = 0) {
+	public function delete($stepsBack = 0)
+	{
 		$i = $this->getIndex($stepsBack);
 		array_splice($this->array, $i, 1);
 	}
