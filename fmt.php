@@ -304,6 +304,7 @@ function orderUseStatements($content) {
 
 	$values = [];
 	$inUses = FALSE;
+	$enabled = TRUE;
 	foreach ($tokens as $token) {
 		list($name, $value) = sanitizeToken($token);
 
@@ -327,6 +328,7 @@ function orderUseStatements($content) {
 					array_multisort($uses, $comments2);
 					$block = '';
 					foreach ($uses as $i => $use) {
+						$use = str_replace('@', ' as ', $use);
 						$block .= "use $use;";
 						isset($comments2[$i]) && $block .= " $comments2[$i]";
 						$block .= PHP_EOL;
@@ -336,15 +338,20 @@ function orderUseStatements($content) {
 				}
 				$requireUse = FALSE;
 			} elseif ($name !== T_USE) {
-				$currentUse .= $value;
+				$currentUse .= $name === T_AS ? '@' : $value;
 			}
-		} elseif ($name === T_USE) {
+		} elseif ($enabled && $name === T_USE) {
 			$requireUse = FALSE;
 			$inUses = TRUE;
 			$uses = [];
 			$comments = [];
 			$currentUse = '';
 		} else {
+			if ($name === T_FUNCTION) {
+				$enabled = FALSE;
+			} elseif ($value === '{') {
+				$enabled = TRUE;
+			}
 			$values[] = $value;
 		}
 	}
