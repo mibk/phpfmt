@@ -92,7 +92,7 @@ function fmt($content) {
 			}
 
 		} elseif (isOneLineComment($name, $value)) {
-			$value = preg_replace('#^//\s*#', '// ', $value);
+			$value = preg_replace('#^//(\w)#', '// $1', $value);
 
 		} elseif ($value === ';') {
 			if ($braceAfterSemicolon) {
