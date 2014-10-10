@@ -21,6 +21,7 @@ if (isset($options['f'])) {
 $content = file_get_contents($file ?: 'php://stdin');
 
 $content = fmt($content);
+$content = orderUseStatements($content);
 $content = convertSpacesToTabs($content);
 $content = removeTrailingWhitespace($content);
 $content = ensureTrailingEol($content);
@@ -294,6 +295,58 @@ function convertSpacesToTabs($content, $tabWidth = 4) {
 			$eol = FALSE;
 		}
 		$values[] = $value;
+	}
+	return implode('', $values);
+}
+
+function orderUseStatements($content) {
+	$tokens = token_get_all($content);
+
+	$values = [];
+	$inUses = FALSE;
+	foreach ($tokens as $token) {
+		list($name, $value) = sanitizeToken($token);
+
+		if ($inUses) {
+			if ($value === ',' || $value === ';') {
+				$value === ';' && $requireUse = TRUE;
+				$uses[] = $currentUse;
+				$currentUse = '';
+			} elseif ($name === T_COMMENT) {
+				$comments[count($uses)-1] = $value;
+
+			} elseif ($name === T_WHITESPACE || $requireUse) {
+				if ($name === T_WHITESPACE && preg_match('/\n.*\n/', $value)
+					|| $name !== T_WHITESPACE && $requireUse && $name !== T_USE) {
+					$inUses = FALSE;
+
+					$comments2 = [];
+					foreach ($uses as $i => $_) {
+						$comments2[] = isset($comments[$i]) ? $comments[$i] : NULL;
+					}
+					array_multisort($uses, $comments2);
+					$block = '';
+					foreach ($uses as $i => $use) {
+						$block .= "use $use;";
+						isset($comments2[$i]) && $block .= " $comments2[$i]";
+						$block .= PHP_EOL;
+					}
+					$values[] = rtrim($block, PHP_EOL);
+					$values[] = $value;
+				}
+				$requireUse = FALSE;
+			} elseif ($name !== T_USE) {
+				$currentUse .= $value;
+			}
+		} elseif ($name === T_USE) {
+			$requireUse = FALSE;
+			$inUses = TRUE;
+			$uses = [];
+			$comments = [];
+			$currentUse = '';
+		} else {
+			$values[] = $value;
+		}
 	}
 	return implode('', $values);
 }
