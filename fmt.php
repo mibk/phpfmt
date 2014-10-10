@@ -94,6 +94,11 @@ function fmt($content) {
 		} elseif (isOneLineComment($name, $value)) {
 			$value = preg_replace('#^//(\w)#', '// $1', $value);
 
+		} elseif (in_array($name, [T_ARRAY_CAST, T_BOOL_CAST, T_DOUBLE_CAST,
+			T_INT_CAST, T_OBJECT_CAST, T_STRING_CAST, T_UNSET_CAST])) {
+			$value = str_replace(' ', '', $value);
+			$writeSpace = TRUE;
+
 		} elseif ($value === ';') {
 			if ($braceAfterSemicolon) {
 				$braceAfterSemicolon = FALSE;
