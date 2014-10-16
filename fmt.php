@@ -147,7 +147,9 @@ function fmt($content) {
 			$indent = getIndent($output->getLastNewLineWhitespace());
 			$searchingFunction = TRUE;
 
-		} elseif ($name === T_CLASS || $name === T_FUNCTION && $searchingFunction) {
+		} elseif ($name === T_CLASS
+			|| $name === T_INTERFACE
+			|| $name === T_FUNCTION && $searchingFunction) {
 			$name === T_CLASS && $indent = getIndent($output->getLastNewLineWhitespace());
 			$braceOnNextLine = TRUE;
 			$searchingFunction = FALSE;
