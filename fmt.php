@@ -68,6 +68,11 @@ function fmt($content) {
 			}
 			$value = removeEmptyLines($value);
 
+			// Function parameter on multiple lines
+			if (strpos($value, "\n") !== FALSE && $output->getValue() === ',') {
+				$braceOnNextLine = FALSE;
+			}
+
 		} elseif ($expectBrace) {
 			$expectBrace = FALSE;
 			if ($expectIf && $name === T_IF) {
@@ -147,9 +152,13 @@ function fmt($content) {
 			$braceOnNextLine = TRUE;
 			$searchingFunction = FALSE;
 
-		} elseif ($value === '{' && $braceOnNextLine) {
-			$braceOnNextLine = FALSE;
-			sanitizePreviousWhitespace($output, PHP_EOL."$indent");
+		} elseif ($value === '{') {
+			if ($braceOnNextLine) {
+				$braceOnNextLine = FALSE;
+				sanitizePreviousWhitespace($output, PHP_EOL."$indent");
+			} elseif ($output->getName() === T_WHITESPACE) {
+				$output->setValue(' ');
+			}
 		}
 
 		$output->push($name, $value);
