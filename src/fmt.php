@@ -259,7 +259,7 @@ function isOneLineComment($name, $value) {
 }
 
 function sanitizeDocComment($value, $indent) {
-	$value = trim($value, '/*');
+	$value = trim($value, "/*\r\n\t ");
 	$lines = explode("\n", trim($value));
 
 	$outputLines = [];
