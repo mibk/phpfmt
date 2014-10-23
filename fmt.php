@@ -154,6 +154,9 @@ function fmt($content) {
 			$braceOnNextLine = TRUE;
 			$searchingFunction = FALSE;
 
+		} elseif ($name === T_DOC_COMMENT) {
+			$value = sanitizeDocComment($value, getIndent($output->getValue()));
+
 		} elseif ($value === '{') {
 			if ($braceOnNextLine) {
 				$braceOnNextLine = FALSE;
@@ -205,6 +208,62 @@ function ensureTrailingEol($content) {
 
 function isOneLineComment($name, $value) {
 	return $name === T_COMMENT && strpos($value, '/*') !== 0;
+}
+
+function sanitizeDocComment($value, $indent) {
+	$value = trim($value, '/*');
+	$lines = explode("\n", trim($value));
+
+	$outputLines = [];
+	$table = [];
+	for ($i = 0; $i < count($lines)+1; $i++) {
+		$last = !isset($lines[$i]);
+		$line = $last ? '' : ltrim(rtrim($lines[$i], "\t\r "), "*\t ");
+		if (!$last && preg_match('/^@[a-z-]+/i', $line)) {
+			$table[] = preg_split('/\s+/', $line);
+		} else {
+			if ($table) {
+				$rows = alignTable($table);
+				foreach ($rows as $row) {
+					$outputLines[] = $row;
+				}
+				$table = [];
+			}
+			!$last && $outputLines[] = $line;
+		}
+	}
+	if (count($outputLines) === 1) {
+		return "/** $outputLines[0] */";
+	}
+	return '/**'.PHP_EOL.implode(PHP_EOL, array_map(function ($line) use($indent) {
+		return "$indent * $line";
+	}, $outputLines)).PHP_EOL.$indent.' */';
+}
+
+function alignTable(array $table) {
+	$lines = array_fill(0, count($table), '');
+	$widths = [];
+	foreach ($table as $row) {
+		$i = 0;
+		foreach ($row as $col) {
+			$w = strlen($col);
+			if (!isset($widths[$i]) || $w > $widths[$i]) {
+				$widths[$i] = $w;
+			}
+			$i++;
+		}
+	}
+	$r = 0;
+	foreach ($table as $row) {
+		$i = 0;
+		foreach ($row as $col) {
+			$lines[$r] .= str_pad($col, $widths[$i]+1);
+			$i++;
+		}
+		$lines[$r] = trim($lines[$r]);
+		$r++;
+	}
+	return $lines;
 }
 
 class Output
