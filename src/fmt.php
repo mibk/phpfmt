@@ -266,9 +266,18 @@ function sanitizeDocComment($value, $indent) {
 	$table = [];
 	for ($i = 0; $i < count($lines)+1; $i++) {
 		$last = !isset($lines[$i]);
-		$line = $last ? '' : ltrim(rtrim($lines[$i], "\t\r "), "*\t ");
-		if (!$last && preg_match('/^@[a-z-]+/i', $line)) {
-			$table[] = preg_split('/\s+/', $line);
+		if ($last) {
+			$line = '';
+		} else {
+			$line = rtrim($lines[$i], "\t\r ");
+			if (preg_match('/^\s*\* ?(.*)/', $line, $m)) {
+				$line = $m[1];
+			} else {
+				$line = ltrim($line);
+			}
+		}
+		if (!$last && preg_match('/^\s*@[a-z-]+/i', $line)) {
+			$table[] = preg_split('/\s+/', trim($line));
 		} else {
 			if ($table) {
 				$rows = alignTable($table);
