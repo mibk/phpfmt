@@ -472,7 +472,7 @@ function orderUseStatements($content) {
 					array_multisort($uses, $comments2);
 					$block = '';
 					foreach ($uses as $i => $use) {
-						$use = str_replace('@', ' as ', $use);
+						$use = str_replace(['@', ':'], [' as ', '\\'], $use);
 						$block .= "use $use;";
 						isset($comments2[$i]) && $block .= " $comments2[$i]";
 						$block .= PHP_EOL;
@@ -482,7 +482,13 @@ function orderUseStatements($content) {
 				}
 				$requireUse = FALSE;
 			} elseif ($name !== T_USE) {
-				$currentUse .= $name === T_AS ? '@' : $value;
+				if ($name === T_AS) {
+					$currentUse .= '@';
+				} elseif ($value === '\\') {
+					$currentUse .= ':';
+				} else {
+					$currentUse .= $value;
+				}
 			}
 		} elseif ($enabled && $name === T_USE) {
 			$requireUse = FALSE;
