@@ -289,11 +289,25 @@ function sanitizeDocComment($value, $indent) {
 }
 
 function alignTable(array $table) {
+	static $annotation_params = [
+		'@property' => 2,
+		'@property-read' => 2,
+		'@property-write' => 2,
+		'@var' => 1,
+		'@param' => 2,
+		'@return' => 1,
+	];
+
 	$lines = array_fill(0, count($table), '');
 	$widths = [];
 	foreach ($table as $row) {
 		$i = 0;
 		foreach ($row as $col) {
+			if ($i == 0) {
+				$ceil = 1 + (isset($annotation_params[$col]) ? $annotation_params[$col] : 0);
+			} elseif ($i == $ceil) {
+				break;
+			}
 			$w = strlen($col);
 			if (!isset($widths[$i]) || $w > $widths[$i]) {
 				$widths[$i] = $w;
@@ -305,7 +319,14 @@ function alignTable(array $table) {
 	foreach ($table as $row) {
 		$i = 0;
 		foreach ($row as $col) {
-			$lines[$r] .= str_pad($col, $widths[$i]+1);
+			if ($i == 0) {
+				$ceil = 1 + (isset($annotation_params[$col]) ? $annotation_params[$col] : 0);
+			}
+			if ($i >= $ceil) {
+				$lines[$r] .= "$col ";
+			} else {
+				$lines[$r] .= str_pad($col, $widths[$i]+1);
+			}
 			$i++;
 		}
 		$lines[$r] = trim($lines[$r]);
