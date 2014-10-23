@@ -259,6 +259,7 @@ function isOneLineComment($name, $value) {
 }
 
 function sanitizeDocComment($value, $indent) {
+	$oneLine = !preg_match('/^\/\*\*\s*\n\s*/', $value);
 	$value = trim($value, "/*\r\n\t ");
 	$lines = explode("\n", trim($value));
 
@@ -289,7 +290,7 @@ function sanitizeDocComment($value, $indent) {
 			!$last && $outputLines[] = $line;
 		}
 	}
-	if (count($outputLines) === 1) {
+	if ($oneLine && count($outputLines) === 1) {
 		return "/** $outputLines[0] */";
 	}
 	return '/**'.PHP_EOL.implode(PHP_EOL, array_map(function ($line) use($indent) {
