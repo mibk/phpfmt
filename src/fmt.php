@@ -6,19 +6,63 @@
 // 4. odstranit trailing whitespace
 // 5. trailing newline on EOF
 
-$options = getopt('f:h');
+require __DIR__ . '/../vendor/autoload.php';
+set_time_limit(0);
+date_default_timezone_set('Europe/Prague');
 
-if (isset($options['h'])) {
-	echo "Usage: php fmt.php <filename>\n";
+$options = (new PhpOptions\Options())
+	->setOption('help')
+	->setOption('version', NULL)
+	->setOption('write')
+	;
+
+$args = $_SERVER['argv'];
+array_shift($args);
+try {
+	$options->parse($args, FALSE);
+} catch (Exception $e) {
+	if ($e instanceof PhpOptions\UnknownOptionException) {
+		echo 'Unknown option -'.($e->isLongOption() ? '-' : '').$e->getName().".\n";
+
+	} elseif ($e instanceof PhpOptions\MissingArgumentException) {
+		echo 'Missing argument for option -'.($e->isLongOption()
+			? '-'.$e->getOption()->getLongName()
+			: $e->getOption()->getShortName()).".\n";
+
+	} elseif ($e instanceof PhpOptions\UnexpectedArgumentException) {
+		echo 'Unexpected argument for option -'.($e->isLongOption()
+			? '-'.$e->getOption()->getLongName()
+			: $e->getOption()->getShortName()).".\n";
+	} else {
+		throw $e;
+	}
 	exit(1);
 }
+$args = $options->getArguments();
 
-$file = FALSE;
-if (isset($options['f'])) {
-	$file = $options['f'];
+function usage($code = 0) {
+	echo "Usage: phpfmt [-w] <filename>\n";
+	exit($code);
 }
 
-$content = file_get_contents($file ?: 'php://stdin');
+$write = FALSE;
+foreach ($options as $opt => $value) {
+	switch ($opt) {
+		case 'help':
+			usage(1);
+		case 'version':
+			echo "phpfmt version @dev\n";
+			exit;
+		case 'write':
+			$write = TRUE;
+	}
+}
+
+$args || usage(1);
+
+list($file) = $args;
+
+$content = file_get_contents($file === '-' ? 'php://stdin' : $file);
 
 $content = fmt($content);
 $content = orderUseStatements($content);
@@ -26,7 +70,11 @@ $content = convertSpacesToTabs($content);
 $content = removeTrailingWhitespace($content);
 $content = ensureTrailingEol($content);
 
-file_put_contents($file ?: 'php://stdout', $content);
+if ($write && $file !== '-') {
+	file_put_contents($file, $content);
+} else {
+	file_put_contents('php://stdout', $content);
+}
 
 // Functions
 

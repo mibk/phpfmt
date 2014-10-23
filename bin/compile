@@ -1,0 +1,85 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Based on nette/tester create-phar.php tool.
+ */
+if (!class_exists('Phar') || ini_get('phar.readonly')) {
+	echo "Error: Enable Phar extension and set directive 'phar.readonly=off'.\n";
+	exit(1);
+}
+
+@list(, $appName) = $_SERVER['argv'];
+$appName || $appName = 'phpfmt.phar';
+
+try {
+	(new Compiler)->compile($appName);
+} catch (Exception $e) {
+	echo 'Error: Failed to compile phar: ['.get_class($e).'] '.$e->getMessage().' at '.$e->getFile().':'.$e->getLine();
+	exit(1);
+}
+
+class Compiler
+{
+	private $pathPrefix;
+	private $phar;
+
+	public function __construct()
+	{
+		$this->pathPrefix = dirname(__DIR__);
+	}
+
+	public function compile($name)
+	{
+		echo "Building phpfmt.\n";
+		$build = @exec('git describe --tags --always');
+		$build || $build = 'unknown-version';
+		echo "Build: $build\n";
+
+		@unlink($name);
+		$this->phar = new Phar($name);
+		$stub = <<<EOL
+#!/usr/bin/env php
+<?php
+/*
+ * Nelper $build
+ */
+
+Phar::mapPhar('$name');
+require 'phar://$name/src/fmt.php';
+
+__HALT_COMPILER();
+EOL;
+		$this->phar->setStub($stub);
+
+		$this->phar->startBuffering();
+		$this->addDirectory('src');
+		$this->addDirectory('vendor/mbohuslavek/php-options/src');
+		$this->addFile('vendor/autoload.php');
+		$this->addFile('vendor/composer/autoload_classmap.php');
+		$this->addFile('vendor/composer/autoload_namespaces.php');
+		$this->addFile('vendor/composer/autoload_psr4.php');
+		$this->addFile('vendor/composer/autoload_real.php');
+		$this->addFile('vendor/composer/ClassLoader.php');
+		$this->phar->stopBuffering();
+		echo "Built in $name.\n";
+	}
+
+	private function addDirectory($dirname)
+	{
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator("$this->pathPrefix/$dirname", RecursiveDirectoryIterator::SKIP_DOTS)
+		);
+		foreach ($iterator as $file) {
+			$this->addFile("$dirname/{$iterator->getSubPathname()}");
+		}
+	}
+
+	private function addFile($filename)
+	{
+		echo "+ $filename\n";
+		$file = "$this->pathPrefix/$filename";
+		$this->phar[$filename] = php_strip_whitespace($file);
+	}
+
+}

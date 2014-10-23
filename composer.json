@@ -1,0 +1,19 @@
+{
+	"name": "mbohuslavek/phpfmt",
+	"description": "phpfmt: a tool for formatting PHP source code",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Michal Bohuslávek",
+			"email": "mbohuslavek@gmail.com"
+		}
+	],
+	"autoload": {
+		"classmap": ["src/"]
+	},
+	"require": {
+		"php": ">=5.4.0",
+		"mbohuslavek/php-options": "@dev"
+	},
+	"bin": ["bin/phpfmt"]
+}
