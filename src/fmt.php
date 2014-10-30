@@ -544,7 +544,7 @@ function alignColumns($content) {
 					$row[] = $cell;
 					$table[] = $row;
 					$output->push(NULL, implode(PHP_EOL.$indent, alignTable($table)));
-					$output->push(T_WHITESPACE, PHP_EOL.PHP_EOL.$indent);
+					$output->push(T_WHITESPACE, PHP_EOL.PHP_EOL.getIndent($value));
 					$name !== T_WHITESPACE && $output->push($name, $value);
 					$scanConsts = FALSE;
 				} else {
