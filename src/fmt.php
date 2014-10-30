@@ -66,6 +66,7 @@ $content = file_get_contents($file === '-' ? 'php://stdin' : $file);
 
 $content = fmt($content);
 $content = orderUseStatements($content);
+$content = alignColumns($content);
 $content = convertSpacesToTabs($content);
 $content = removeTrailingWhitespace($content);
 $content = ensureTrailingEol($content);
@@ -516,4 +517,56 @@ function orderUseStatements($content) {
 		}
 	}
 	return implode('', $values);
+}
+
+function alignColumns($content) {
+	$output = new Output;
+
+	$scanConsts = FALSE;
+	$catchConst = FALSE;
+
+	$tokens = token_get_all($content);
+	foreach ($tokens as $token) {
+		list($name, $value) = sanitizeToken($token);
+
+		if ($scanConsts) {
+			if ($catchConst) {
+				if ($name === T_CONST) {
+					$row[] = $cell;
+					$table[] = $row;
+					$row = [];
+					$cell = '';
+					$catchConst = FALSE;
+				} elseif (isOneLineComment($name, $value)) {
+					$oneLine = TRUE; // kvulí jednořádkovému komentáři a \n
+				} elseif ($name !== T_COMMENT
+					&& ($name !== T_WHITESPACE || preg_match('/'.($oneLine ? '' : '\n.*').'\n/', $value))) {
+					$row[] = $cell;
+					$table[] = $row;
+					$output->push(NULL, implode(PHP_EOL.$indent, alignTable($table)));
+					$output->push(T_WHITESPACE, PHP_EOL.PHP_EOL.$indent);
+					$name !== T_WHITESPACE && $output->push($name, $value);
+					$scanConsts = FALSE;
+				} else {
+					$oneLine = FALSE;
+				}
+			} elseif ($value === '=') {
+				$row[] = trim($cell);
+				$cell = '';
+				$oneLine = FALSE;
+			}
+			$cell .= $value;
+			$value === ';' && $catchConst = TRUE;
+		} elseif ($name === T_CONST) {
+			$indent = getIndent($output->getValue());
+			$scanConsts = TRUE;
+			$catchConst = FALSE;
+			$oneLine = FALSE;
+			$table = $row = [];
+			$cell = $value;
+		} else {
+			$output->push($name, $value);
+		}
+	}
+	return (string) $output;
 }
