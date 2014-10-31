@@ -454,14 +454,36 @@ function convertSpacesToTabs($content, $tabWidth = 4) {
 	return implode('', $values);
 }
 
+function tokenGetAll($content) {
+	$tokens = [];
+	$addEol = FALSE;
+	foreach (token_get_all($content) as $token) {
+		list($name, $value) = sanitizeToken($token);
+		if ($addEol) {
+			if ($name === T_WHITESPACE) {
+				$value = PHP_EOL.$value;
+			} else {
+				$tokens[] = [T_WHITESPACE, PHP_EOL];
+			}
+			$addEol = FALSE;
+		}
+		if (isOneLineComment($name, $value)) {
+			$value = rtrim($value);
+			$addEol = TRUE;
+		}
+		$tokens[] = [$name, $value];
+	}
+	return $tokens;
+}
+
 function orderUseStatements($content) {
-	$tokens = token_get_all($content);
+	$tokens = tokenGetAll($content);
 
 	$values = [];
 	$inUses = FALSE;
 	$enabled = TRUE;
 	foreach ($tokens as $token) {
-		list($name, $value) = sanitizeToken($token);
+		list($name, $value) = $token;
 
 		if ($inUses) {
 			if ($value === ',' || $value === ';') {
@@ -472,8 +494,9 @@ function orderUseStatements($content) {
 				$comments[count($uses)-1] = $value;
 
 			} elseif ($name === T_WHITESPACE || $requireUse) {
-				if ($name === T_WHITESPACE && preg_match('/\n.*\n/', $value)
-					|| $name !== T_WHITESPACE && $requireUse && $name !== T_USE) {
+				if ($name === T_USE) {
+					$requireUse = FALSE;
+				} elseif ($name !== T_WHITESPACE || preg_match('/\n.*\n/', $value)) {
 					$inUses = FALSE;
 
 					$comments2 = [];
@@ -485,13 +508,15 @@ function orderUseStatements($content) {
 					foreach ($uses as $i => $use) {
 						$use = str_replace(['@', ':'], [' as ', '\\'], $use);
 						$block .= "use $use;";
-						isset($comments2[$i]) && $block .= " $comments2[$i]";
+						isset($comments2[$i]) && $block .= ' '.$comments2[$i];
 						$block .= PHP_EOL;
 					}
 					$values[] = rtrim($block, PHP_EOL);
-					$values[] = $value;
+					$values[] = PHP_EOL.PHP_EOL.getIndent($value);
+					if ($name !== T_WHITESPACE) {
+						$values[] = $value;
+					}
 				}
-				$requireUse = FALSE;
 			} elseif ($name !== T_USE) {
 				if ($name === T_AS) {
 					$currentUse .= '@';
