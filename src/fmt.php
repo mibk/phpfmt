@@ -111,7 +111,8 @@ function fmt($content) {
 		}
 
 		if ($name === T_WHITESPACE) {
-			if (isOneLineComment($output->getName(), $output->getValue())) {
+			if (isOneLineComment($output->getName(), $output->getValue())
+				|| $output->getName() === T_OPEN_TAG) {
 				$output->setValue(rtrim($output->getValue()));
 				$value = PHP_EOL.$value;
 			}
