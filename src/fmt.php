@@ -280,7 +280,7 @@ function sanitizeDocComment($value, $indent) {
 			}
 		}
 		if (!$last && preg_match('/^\s*@[a-z-]+/i', $line)) {
-			$table[] = preg_split('/\s+/', trim($line));
+			$table[] = preg_split('/(?<!=)\s+(?!=)/', trim($line));
 		} else {
 			if ($table) {
 				$rows = alignTable($table);
