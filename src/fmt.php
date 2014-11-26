@@ -200,7 +200,9 @@ function fmt($content) {
 		} elseif ($name === T_CLASS
 			|| $name === T_INTERFACE
 			|| $name === T_FUNCTION && $searchingFunction) {
-			$name === T_CLASS && $indent = getIndent($output->getLastNewLineWhitespace());
+			if ($name === T_CLASS || $name === T_INTERFACE) {
+				$indent = getIndent($output->getLastNewLineWhitespace());
+			}
 			$braceOnNextLine = TRUE;
 			$searchingFunction = FALSE;
 
