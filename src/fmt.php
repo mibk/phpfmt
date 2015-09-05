@@ -57,7 +57,7 @@ foreach ($options as $opt => $value) {
 }
 
 $paths = $options->getArguments();
-if (count($paths) === 0){
+if (count($paths) === 0) {
 	$paths[] = 'php://stdin';
 	$write = FALSE;
 }
@@ -161,7 +161,7 @@ function fmt($content) {
 			$value = strtoupper($value);
 
 		} elseif (in_array($name, [T_IF, T_ELSEIF, T_ELSE, T_SWITCH, T_DO, T_WHILE, T_FOR, T_FOREACH, T_TRY, T_CATCH])) {
-			$indent = getIndent($output->getValue());
+			$indent = getIndent($output->getLastNewLineWhitespace());
 			$writeSpace = TRUE;
 
 			if ($name === T_DO) {
