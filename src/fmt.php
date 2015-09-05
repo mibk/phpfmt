@@ -59,7 +59,7 @@ foreach ($options as $opt => $value) {
 $paths = $options->getArguments();
 if (count($paths) === 0){
 	$paths[] = 'php://stdin';
-	$write = false;
+	$write = FALSE;
 }
 
 foreach ($paths as $path) {
@@ -180,7 +180,7 @@ function fmt($content) {
 				sanitizePreviousWhitespace($output);
 			}
 
-		} elseif ($name === '' && $catchParenthesis) {
+		} elseif ($name === NULL && $catchParenthesis) {
 			if ($value === '(') {
 				$catchParenthesis === TRUE && $catchParenthesis = 0;
 				$catchParenthesis++;
