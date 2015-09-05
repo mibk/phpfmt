@@ -1,10 +1,10 @@
 <?php
 
-// 1. normalizovat if/elseif/else/try/catch/while/for/foreach
-// 2. odstranit prázdné řádky na 1 prázdný řádek
-// 3. true, false, null -- velké
-// 4. odstranit trailing whitespace
-// 5. trailing newline on EOF
+// 1. Normalize if/elseif/else/try/catch/while/for/foreach
+// 2. Reduce blank lines to one
+// 3. Capitalize true, false, null
+// 4. Trim trailing whitespace
+// 5. Ensure trailing newline on EOF
 
 require __DIR__ . '/../vendor/autoload.php';
 set_time_limit(0);
@@ -41,7 +41,7 @@ try {
 $args = $options->getArguments();
 
 function usage($code = 0) {
-	echo "Usage: phpfmt [-w] <filename>\n";
+	echo "Usage: phpfmt [-w] [path]\n";
 	exit($code);
 }
 
@@ -58,11 +58,8 @@ foreach ($options as $opt => $value) {
 	}
 }
 
-$args || usage(1);
-
-list($file) = $args;
-
-$content = file_get_contents($file === '-' ? 'php://stdin' : $file);
+@list($file) = $args;
+$content = file_get_contents($file == NULL ? 'php://stdin' : $file);
 
 $content = fmt($content);
 $content = orderUseStatements($content);
@@ -71,7 +68,7 @@ $content = convertSpacesToTabs($content);
 $content = removeTrailingWhitespace($content);
 $content = ensureTrailingEol($content);
 
-if ($write && $file !== '-') {
+if ($write && $file != NULL) {
 	file_put_contents($file, $content);
 } else {
 	file_put_contents('php://stdout', $content);
