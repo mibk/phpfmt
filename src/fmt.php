@@ -182,7 +182,7 @@ function fmt($content) {
 				sanitizePreviousWhitespace($output);
 			}
 
-		} elseif ($catchParenthesis) {
+		} elseif ($name === '' && $catchParenthesis) {
 			if ($value === '(') {
 				$catchParenthesis === TRUE && $catchParenthesis = 0;
 				$catchParenthesis++;
