@@ -38,10 +38,8 @@ try {
 	}
 	exit(1);
 }
-$args = $options->getArguments();
-
 function usage($code = 0) {
-	echo "Usage: phpfmt [-w] [path]\n";
+	echo "Usage: phpfmt [-w] [path ...]\n";
 	exit($code);
 }
 
@@ -58,20 +56,23 @@ foreach ($options as $opt => $value) {
 	}
 }
 
-@list($file) = $args;
-$content = file_get_contents($file == NULL ? 'php://stdin' : $file);
+$paths = $options->getArguments();
+if (count($paths) === 0){
+	$paths[] = 'php://stdin';
+	$write = false;
+}
 
-$content = fmt($content);
-$content = orderUseStatements($content);
-$content = alignColumns($content);
-$content = convertSpacesToTabs($content);
-$content = removeTrailingWhitespace($content);
-$content = ensureTrailingEol($content);
+foreach ($paths as $path) {
+	$content = file_get_contents($path);
 
-if ($write && $file != NULL) {
-	file_put_contents($file, $content);
-} else {
-	file_put_contents('php://stdout', $content);
+	$content = fmt($content);
+	$content = orderUseStatements($content);
+	$content = alignColumns($content);
+	$content = convertSpacesToTabs($content);
+	$content = removeTrailingWhitespace($content);
+	$content = ensureTrailingEol($content);
+
+	file_put_contents($write ? $path : 'php://stdout', $content);
 }
 
 // Functions
