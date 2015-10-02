@@ -65,6 +65,7 @@ if (count($paths) === 0) {
 foreach ($paths as $path) {
 	$content = file_get_contents($path);
 
+	$content = sanitizeConstruct($content);
 	$content = fmt($content);
 	$content = orderUseStatements($content);
 	$content = alignColumns($content);
@@ -592,4 +593,54 @@ function alignColumns($content) {
 		}
 	}
 	return (string) $output;
+}
+
+function sanitizeConstruct($content) {
+	return preg_replace_callback('/^([ \t]*)(\w*?\s*)function\s*__construct\s*\((.*?)\)\s*\{/sm', function($m) {
+		$indent = $m[1];
+		$s = $indent.$m[2].'function __construct(';
+
+		$args = splitByComma($m[3]);
+		if (count($args) === 1) {
+			$s .= trim($args[0]);
+		} else {
+			$a = implode(', ', $args);
+			if (strlen($a) <= 60) {
+				$s .= $a;
+			} else {
+				$s .= PHP_EOL.$indent."\t".
+					implode(','.PHP_EOL.$indent."\t", $args).PHP_EOL.$indent;
+			}
+		}
+
+		return $s.') {';
+	}, $content);
+}
+
+function splitByComma($s) {
+	$arr = [];
+	$index = 0;
+	$catch = NULL;
+	$escape = FALSE;
+	for ($i = 0; $i < strlen($s); $i++) {
+		$c = $s{$i};
+		if ($catch) {
+			if ($escape) {
+				$escape = FALSE;
+			} elseif ($c === '\\') {
+				$escape = TRUE;
+			} elseif ($c === $catch) {
+				$catch = NULL;
+			}
+		} elseif ($c === '"' || $c === '\'') {
+			$catch = $c;
+		} elseif ($c === ',') {
+			$arr[$index] = trim(@$arr[$index]);
+			$index++;
+			continue;
+		}
+		@$arr[$index] .= $c;
+	}
+	$arr[$index] = trim(@$arr[$index]);
+	return $arr;
 }
