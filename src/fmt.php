@@ -596,11 +596,15 @@ function alignColumns($content) {
 }
 
 function sanitizeConstruct($content) {
-	return preg_replace_callback('/^([ \t]*)(?:\w+?\s*)?function\s*__construct\s*\((.*?)\)\s*\{/sm', function($m) {
+	return preg_replace_callback('/^([ \t]*)(?:(\w+?)\s*)?function\s*__construct\s*\((.*?)\)\s*\{/sm', function($m) {
 		$indent = $m[1];
-		$s = $indent.'public function __construct(';
+		$visibility = $m[2];
+		if ($visibility == '') {
+			$visibility = 'public';
+		}
+		$s = $indent."$visibility function __construct(";
 
-		$args = splitByComma($m[2]);
+		$args = splitByComma($m[3]);
 		if (count($args) === 1) {
 			$s .= trim($args[0]);
 		} else {
