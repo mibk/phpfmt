@@ -532,10 +532,10 @@ function orderUseStatements($content) {
 			$comments = [];
 			$currentUse = '';
 		} else {
-			if ($name === T_FUNCTION) {
+			if ($name === T_FUNCTION || $name === T_CLASS) {
+				// Take care only of those use statements in the beggining
+				// of the file.
 				$enabled = FALSE;
-			} elseif ($value === '{') {
-				$enabled = TRUE;
 			}
 			$values[] = $value;
 		}
