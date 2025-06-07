@@ -1,0 +1,15 @@
+<?php // PHP -align
+
+/**
+ * @property  int  $id
+ * @property  string  $name
+ * @property  string|null  $foo
+ * @property  int  $baz
+ * @property  DateTime|null  $created
+ */
+class Cat extends Base\Dog
+{
+	const AA = 3;
+	const BBB = 4;
+	const CCCC = 5;
+}

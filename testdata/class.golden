@@ -1,0 +1,75 @@
+<?php
+
+class AAAClass extends \BaseClass implements Traversable
+{
+	use \ThatTrait;
+	const trait = 'trait';
+
+	private $a;
+	protected $bb; // null by default
+	public $cccc   = 333e-2; // impossible to change
+	static $d      = 0b11;
+
+	readonly $read;
+
+	abstract $readable
+	{
+		get;
+	}
+
+	final $test;
+
+	protected string|null $map = null;
+
+	private array&Traversable $arrayForSure = null;
+
+	const FOO_START = self::BAR_START + self::FOO_STEP;
+
+	private function function(string|null $a): void
+	{
+		echo self::trait;
+	}
+
+	public function new(): string|int
+	{
+		return 'this time';
+	}
+
+	protected function createDocuments(array&\Traversable $arr): Components\Docs
+	{
+		$id = $this->param('id');
+		return $this->docFactory->create(new class() implements \Components\DocumentManager {
+			public function getDocuments()
+			{
+				return (array) $this->documents;
+			}
+
+			public function assignDoc(Docs\File $f): void
+			{
+				$this->reports->assign($f);
+			}
+		});
+	}
+}
+
+class Dep
+{
+	private ?Product $product = null;
+
+	public function __construct(
+		$arg = null,
+		private ?All\Files $files = null,
+		private ?Links $links = null,
+	)
+	{
+		$foo = [
+			'lastOne' => $last ? ($now->diff($last->date)->days ?: null) : null,
+		];
+	}
+}
+
+var_dump(AAAClass::{$searchableConstant});
+
+$a = new class() {
+}
+	->doesNotExist();

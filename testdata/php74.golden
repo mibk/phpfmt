@@ -1,0 +1,11 @@
+<?php // PHP 70400
+
+// No trailing comma.
+callFn(
+	'arg1',
+	arg2
+);
+
+// Different precedence of operators.
+echo 'Sum: ' . $a + $b;
+echo 'Shift: '.$a << 2;

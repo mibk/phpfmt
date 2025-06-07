@@ -1,0 +1,12 @@
+<?php
+
+trait Prop{
+	public$foo;
+}
+
+class Foo{
+use\Prop,PropB{
+        A  ::  sayHello insteadof\B;
+A::sayWorld insteadof B;
+        B::sayWorld as talk;
+    }}

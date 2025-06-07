@@ -1,0 +1,12 @@
+<?php
+namespace\Foo;
+    use Key\Query;
+use  ZZZ as A;
+use   BB ;
+use AAAA  ;
+use League\Class;
+use Meta\Http\Class;
+use Meta;
+use\DateTime;
+
+class AA{}

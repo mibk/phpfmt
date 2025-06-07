@@ -1,0 +1,202 @@
+<?php    declare(strict_types = 1);
+
+
+namespace App\Model\Invoice;
+
+use DateTime;
+use App\Model\Base;
+
+/**
+ * @property int           $id
+ * @property string        $title
+ * @property string  |null   $extraInfo
+ * @property int        $alreadySpent
+ * @property DateTime  |null $deleted
+ */
+    class     Issue      extends Base  \Entity{
+
+
+/**
+ * @return string[]
+ */
+public function getFooNumbers( string  ...  $flags )
+{
+	const FOO = 3;
+	const  BAR_BAR = 4;
+
+	$this-> global();
+	$this-> match();
+	self :: global();
+	self :: match();
+
+if(true&&
+FALSE// tohle
+){
+	echo'unreachable';
+}
+
+	print(
+	  'this',
+	'that');
+
+	for(   $i = 0 ; $i < 24 ; $i++ ) { // magic number 24
+			$dataT[$d->format('Y-m-d')] = $d->format('n/Y');
+	}
+			$x=[
+				'foo' =>
+					$this->barItems ?-> subItems
+					->select( [  'id','date','flag' ,]),
+			];
+
+	callme  (
+		$crazy->person->butThis !== null ?
+				date_format($injury->person->birthDate, 'd.m.Y') :
+				'',
+	);
+
+	$this ->setAdhocService(  new  class($this->foo, $this->baz->id)    implements\ Utils \ IDecidor {
+			public function __construct(private Base\Users $users, private int $userID)
+			{}
+		}      ) ;
+
+
+	$x=["Done with {$c->ident}-{$c->name}.$file->ext" =>
+					$this->database->getContentFor($file)];
+
+	switch(  true ){//add space before
+	case  $a===2 :
+
+		// As well as this comment,
+	// this comment belongs here
+	case $a  === 3 :
+	print('yes'   ,)  ;
+			// And this goes here
+		default: print ('no');
+		}
+
+$foo=match(  $resp ){
+			'binary'=>01 ,
+			'defined'=> false ,
+			default =>null }  ;
+
+
+	if(false){return   ;}
+	else
+	if  (true) throw new\Except ;
+
+	unset ($a['x'],
+	$a['y'])  ;
+
+
+	$colours = array_merge($colors ,[
+		'blue'  =>   '#231313'  ,
+		'yellow'  =>   '#98788'
+		]  );
+
+		if (  $this  ->	secret    ===   null
+		&& ! $this ->omitted ) {
+					return[   ];
+		}
+return      explode(';'  ,    $this->secret);
+			}
+
+	public static function detectConfig(): bool
+	{
+		return self::isExplicit()
+			&& getenv('CONFIG_VAL') === false // the default
+			&& (getenv('FORCE_CONFIG')
+				|| (function_exists('eternal_config')
+					? eternal_config(CONFIG_FILE_ET)
+					: @internal_configuration(CONFIG_FILE_ITT)) // rather this one
+			);
+	}
+
+
+protected function createInstance(/*string $class = null*/): Instance{
+	// no comma above
+	return new static ($items, $this->entryClass); // no space after static
+			}
+
+
+	public    function     getFoo   ()  : Foo
+	{
+		$ex = (array) $this->{'query' . ucfirst($fous)}()
+		->orderBy('@created')
+			->find();
+
+		$this->call()
+			  ->this()
+			  ->done()
+			  ;
+				return    $this->correspondingFoo->bar;
+	}}
+
+function bar () {
+	$daysToPlay = match ($sch->daysToPlay) {
+				1 => '1 den',
+				2, 3, 4 => "$sch->daysToPlay dny",
+			default => "$sch->daysToPlay dní",
+			};
+
+
+	$tens = ['', '', 'dvacet', 'třicet', 'čtyřicet', 'padesát',
+			'šedesát', 'sedmdesát', 'osmdesát', 'devadesát',];
+
+	$callback = function($s) { return date('d.m.Y H:i:s', strtotime($s)); };
+
+
+		$this['updateFoo']['createdDate']->setDefaultValue(
+			$foo->createdDate === null
+				? ''
+				: $foo->createdDate->format('Y'),
+		);
+
+	return($pp->elem === null
+			? '(Element nespecifikován)'
+			: $pp->elem->name)
+			. " $pp->fooAmount ($pp->code)";
+
+		$pdf->MultiCell(100, 6, "{$i->bar->food->name}, Kód: {$start->bar->food->ean}\n"
+			. "{$i->address->street} {$i->address->houseNumber}, "
+			. "{$i->address->zipCode} {$i->address->city}");
+
+	$this -> {"{$loc}Symbols"} ;
+
+		if( $clever) {
+			$mustNotDisengageCommaFixer = true;
+		}
+	$a = [
+		0=>false // comma goes before comment
+	] ;
+
+	[ , , $foo , $dtv , ] = $this->genFooDefaults();
+
+	$a<=>$b;
+
+
+	$x = (string) ($range [1] - $range [0] + 1);
+
+
+		$x [ 'foo' ] [ 'bar' ] ;
+}
+
+enum RangeEnumType: string
+{
+	case FROM = 'from';
+	case TO = 'to';
+}
+
+class AAA
+{   }
+
+class BBB
+{
+}
+
+interface IFoo
+{
+	public const
+		FOO_SEQ = 'seq',
+		FOO_COLS = 'scripted_cols',
+		FOO_ORDER = '_order';
+}

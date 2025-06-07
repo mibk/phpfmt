@@ -1,0 +1,8 @@
+<?php
+
+if (
+	aaa &&
+		bbb
+) {
+	echo 'yes';
+}

@@ -1,0 +1,27 @@
+
+
+
+<?php
+
+class AAA {
+/** Incomplete doc */
+
+	function __construct(  $a =    "\"",
+	$b       = '\':::\'') {
+	self  :: doesNotExist (   )    ;
+		if   (true)
+		{
+		@	echo 'ahoj';
+		}
+	}
+}
+
+// Now watch.
+
+
+class BBB {
+	public function __construct(
+	float $longLongName, // not that long
+	 int $boringBoringName,// longer actually
+	 string $fooFooName) {}
+}

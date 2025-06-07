@@ -1,0 +1,4 @@
+<?php
+
+echo ($x?'this':'or that') ;
+print ($x?'this':'or that') ;

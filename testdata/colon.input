@@ -1,0 +1,23 @@
+<?php
+
+var_export ($var, return : true, );
+
+
+switch($a){
+	case 'foo'     :
+	$z = $b?  :true;
+	break      ;
+	case 'bar' :
+	$x = $b?   true:false;
+	break;
+}
+
+function (?DateTime $d)  :void {
+	echo 'no' ;
+};
+
+// Issue formatting stmt after empty switch branch.
+switch($b){
+case FOO:
+}
+echo $b;

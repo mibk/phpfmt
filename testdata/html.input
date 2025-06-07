@@ -1,0 +1,18 @@
+
+  <!DOCTYPE html>
+
+
+<?php // Test
+
+$form -> setup() ;
+
+?>
+<meta charset="utf-8">
+<title>Example</title>
+	<?php $form->render() ?>
+</div>
+
+
+<?php
+
+class Foo {}

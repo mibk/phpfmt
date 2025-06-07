@@ -1,0 +1,11 @@
+<?php
+
+class Foo
+{
+	public function read(): string
+	{
+		$s = '';
+		while (($line = fgets($this->conn, 200)) != null) { // first N
+		}
+	}
+}

@@ -1,0 +1,64 @@
+<?php
+
+$x = isOK()
+? 'ok'
+: 'not OK' ;
+
+$y = isOK() ?
+ 'ok' :
+ 'not OK' ;
+
+
+
+$q = isOK()
+	? $repo
+		->  findAll()
+	: $repo
+	-> findSome  ();
+
+
+$w = isOK()  ?  'yes'
+   :  'no'   ;  // maybe
+
+$w = ( isOK()  ?  'yes'
+   :   'no'    )  ;// maybe
+
+$w = ( isOK()        ?  'yes'
+   :   (andThisOne() ?  'maybe'
+   :   'no'    )   ) ;
+
+
+
+$total  = $a * $b < null?'':number_format($a+$b).' Kč';
+
+
+return $x*($asc ? 1: - 1);
+
+$active = is_array($mi['active']) ? $mi['active'] :[$mi['active']];
+
+$rel = ( $m !== null ? $m->getRel (
+	$source,
+	$target
+):self::getProxy( $type)  );
+
+do {
+	$foo = $message instanceof \stdClass ? $message : (object) [
+		'message' => $message,
+		'type'    => $type,
+	];
+} ;
+
+return $this->invalid & self::InvalidMask
+	? $a * $b . $e->getAll()
+	: $x*$y;
+
+return[]
+	?[]
+	:[]
+	;
+
+	func_num_args()===0
+		?$this ->args
+		:($this ->args[$key]?? null);
+
+	$this->baz === null ? null :[$this->baz];

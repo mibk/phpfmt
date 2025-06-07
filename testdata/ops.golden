@@ -1,0 +1,51 @@
+<?php
+
+$a * $b !== $c;
+
+$a = ~$b;
+
+$d = $a . $b;
+
+if ($a and $b && $c or $d xor $e)
+	doIt();
+
+echo ++$foo->x;
+echo $foo->x--;
+echo --$x;
+echo $x++;
+
+if ($x . $y !== 'foo' and $x*$y == 3);
+
+if ($x / $y !== 0.3 && $x % $y == 3);
+
+echo $x**3 * 4;
+
+$x1 = $a | $b;
+$x2 = $a | $b^$c;
+$x4 = $a | ($b ^ $c)&$d;
+
+if ($a ^ 0x0F!==0);
+
+$f = $x<<$b & 0x03;
+
+$x = 3 + 4*5;
+
+$row % 2 >= 0;
+while ($i-- > 0);
+
+echo 'Sum: ' . $a+$b;
+echo 'Shift: ' . $a<<2;
+
+assert($v[0] instanceof \DateTime);
+
+// Ensure we keep these blanks
+// so they aren’t converted into floats.
+var_dump(1 . 1 & 2);
+var_dump($x . 2 & 2);
+var_dump(3 . $x & 2);
+
+return $x !== 1.;
+
+return $a||$b ?? (string)$c;
+
+return $a and $b??(string)$c;

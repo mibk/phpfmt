@@ -1,0 +1,48 @@
+<?php
+
+// Keep
+//
+// this one.
+
+// OK
+
+/***************/
+
+if // comment 1
+	(true) // comment 2
+{ // comment 3
+	echo 'x'; // comment 4
+}    // comment 5
+else // comment 6
+	if      // comment 7
+	(false) // comment 8
+{ // comment 9
+} // comment 10
+
+/**
+ * Doc comment
+ * Formatted
+ *  - at my will
+ *    - etc.
+ */
+function skip() // comment 11
+{
+}
+
+const
+	AA   = 11,   // basic
+	BBB  = 222,  // better
+	CCCC = 3333; // most advanced
+
+// Must not add 2 \n after this comment.
+
+try // comment A
+{   // comment B
+	callFoo(); // comment C
+}     // comment D
+catch // comment E
+	( // comment F
+		Exception $e // comment G
+	) // comment H
+{
+}

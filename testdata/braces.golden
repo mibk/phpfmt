@@ -1,0 +1,52 @@
+<?php
+{
+	// nested implicit blocks
+	{
+		if (true) {
+			foo();
+			{
+				// another
+			}
+		}
+	}
+}
+
+function foo
+{
+	echo "Well{$done}.";
+}
+
+class Bar
+{
+	public function __construct(): void
+	{
+		$this->pair(function($a) { return $a * $a; });
+		$this->pair(fn($b) => { return $b . $b; });
+		$this->pair(fn($c) => return $c / 2);
+	}
+
+	private function doThat(): int
+	{
+		if ($cond) {
+			echo 'might have';
+		} elseif ($another) {
+			echo 'do it';
+		}
+
+		return 12;
+	}
+
+	private function doAnother(): void
+	{
+		{
+			// explicit block
+		}
+		$stmt->foo();
+		{
+			$anotherExplicitOne;
+		}
+	}
+}
+
+if ($x->{$foo} === 'now');
+if ($x::{$bar} === 'then');

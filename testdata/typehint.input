@@ -1,0 +1,42 @@
+<?php
+
+if ($cnt++ > $this->size) ;
+
+if ($stats['count']++ < 5) ;
+
+
+function translate( string | \ Stringable $msg, mixed...   $args): string | \ Stringable{
+if (count($args) === 0) {
+		return  '' ;
+		}
+
+	$cfg->create()
+	->add(__DIR__)
+	->addAnother( (string)  $args[ 0 ]);
+
+	return$msg;
+
+
+	}
+
+function a(int $a = 0xface, string&$b = 'foo  b', ...$c = ['x']): string|null
+{
+}
+
+function b(bool& ...$x, & ...$y, string ...$z, &$ž = null): string|null
+{
+}
+
+function get( ? \ DateTime$d=Another \ Foo :: T_BAR) :string | null
+{
+}
+
+function bar( array & \Traversable& $arr ) {
+	$funcs= [
+	static fn (Item $item) : int | string=>$item->value
+	] ;
+}
+
+class Foo{
+	public function __construct( private?$bar ){}
+	}

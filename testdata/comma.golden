@@ -1,0 +1,16 @@
+<?php
+
+function doo($previous)
+{
+	$data = $previous->getData([
+		'position',
+		'rel',
+		'work',
+		// And there will be
+		// some other values
+		// later :)
+	]);
+}
+
+$data2 = "Argument \$arg in " . get_called_class(
+) . "::__construct must contain either null, or array…";

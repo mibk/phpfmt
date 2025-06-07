@@ -1,0 +1,47 @@
+<?php
+
+function& getReference( & $x) {
+	static $data=5;
+	return $data;
+}
+
+$x=-  1  ;
+$ref=& getReference($x);
+$ref = 10;
+echo- $ref ;
+
+foreach ($all as& $r ){
+	echo+ $r *- 3;
+}
+
+$y=(int)$floaty ;
+echo(int) $x+$y ;
+
+
+if ((int) $price*100 === 0) {
+
+return (int)$d === (int)$c;
+}
+
+if (! isset($user->email) || ! isset($user->phone)) ;
+if (! $dateDiff->days) ;
+
+// controversial !
+
+assert (! $this->foo &&!$d instanceof\ DateTime) ;
+assert (! !$d instanceof\ DateTime) ;
+
+if (!$foo->name instanceof Foo\Id);
+
+if ($type instanceof BarType || ! $type->canBar() || ! $type->hasItem($m));
+
+return -$a ** 3 ;
+
+return$this->id&0x3;
+
+return$this->val * 100 .'%';
+
+if (($dir->perm&01) === 0);
+if ($date===null|$date<$cr->date);
+
+return! (bool) $y;

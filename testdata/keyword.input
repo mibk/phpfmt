@@ -1,0 +1,8 @@
+<?php
+
+// These are not keywords:
+foo( xor:true , return:true ) ;
+foo( return:true , if:true ) ;
+foo( if:true , static:true ) ;
+foo( static:true , default:true ) ;
+foo( default:true , as:true ) ;

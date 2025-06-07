@@ -1,0 +1,146 @@
+<?php
+
+Class AAA{public/*static*/function __construct  (){}}
+
+$x [/* 2? */ 1 ] ;
+
+function A(){
+	return function (){};}
+
+usort($data ,function ($a,$b)use($c){return$a<=>$b;});
+
+if(aa) { do1(); }
+else if(bb){do2();}
+Else{ do3();}
+
+if($bar)echo 'this' ;
+   else echo 'that' ;
+
+($this->callback) ();
+
+switch(cc){
+case$dd:do4() ;
+default:do5();
+}
+
+$this->partyBlooper();
+
+do
+{do6();
+}
+while(ee) ;
+
+for(;;){ do7(); }
+
+Foreach( $ $ff as$f){do8();}
+
+foreach(Months:: getAll()as$key=>$v);
+
+while(true){echo'the end';}
+
+$this->partyBlooper();
+
+try
+{do8();}
+catch(\Exception$e){
+fix() ;
+}
+finally{echo 'Give up';}
+
+throw$e;
+
+$bar =(string ) $x1.(  int  ) $x2;
+
+
+interface Unit{}
+
+trait UnitTrait{}
+
+enum Sex{case MALE = 'male';
+Case FEMALE = 'female';}
+
+$first = $this->getItems () [ 0 ,] ;
+$x [ 'foo' ] [ 'bar' ] ;
+
+DB :: insert('table',
+			['id', 'val', 'date', 'flag'],
+			96, 140, '2024-10-04 00:00:00', 1
+			);
+
+	const DICTIONARY_TABLE = [
+		self::FOO    => 'Foo',
+		self::Bar      => 'Bar',
+		self::   Baz     => 'Baz'
+	];
+
+class Foo {
+	function Bar(){
+		echo static :: class ;
+
+		$this->looksLike(false) ->cast ();
+	}}
+
+$pdf->Cell(25, self::HEIGHT, $c->name, ['B' => ['width' => .1]], 0);
+			$pdf->Cell(40, self::HEIGHT, $category, ['B' => ['width' => .1]], 0);
+
+		match ($foo->type) {
+			Many\ Options::BAR,
+			Many\ Options::FOO_FOO,
+			Many\ Options::BAZ_BAR =>
+				Docs\Files::append($pdf, $c, $d),
+
+				Many\Types::EXCL_FOO,
+				Many\Types::NEW_BAZ =>
+					Docs\Dirs::append($pdf, $c, $e),
+
+					Many\Types::NON_BAR =>
+						Docs\NonExcl::append($pdf, $c, $ar),
+		};
+
+match($x){
+true => $foo,
+}
+->call() ;
+
+function(){
+	echo 'this is expr';
+}
+();
+
+for ( ;$i < count($volume)-1 ;$i++   ) {
+echo $i ;
+}
+
+for ($i = 0;;)
+echo $i;
+
+for (;$i <10;)
+echo $i++;
+
+
+resize(min:3, max:10);
+
+$data['code',] = $this->coder->encode( ... $bar);
+
+function render( ... $args) ;
+function pass( & $ref) ;
+
+yield from[3, 4];
+
+class Baz{
+private $a=1;
+protected $b=1;
+public$c=1;
+readonly$dddd=1;
+static$eeeee=1;
+final$fffff=1;
+const GGGGG=1;
+}
+
+Foo :: { $x -> method } ( ... $args ) ;
+
+// Spaces before ()
+$xx->setFoo (false);
+$xx['value'] ($bar) ;
+$xx['value'] (true) ;
+$v=self :: {$foo} (true)  ;

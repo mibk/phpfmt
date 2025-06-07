@@ -1,0 +1,44 @@
+<?php
+
+$forInstance
+		->setup         (
+			function(Inputs\Base $input) {
+				return substr(rtrim($s), -1) !== 'foo';
+			},
+			'explain bar',
+		)
+		->setAttr('baz', 'foo me');
+
+
+$this->userMsg('See other.', 'warning')
+			->links = [
+			[
+				'target' => $this->make ('foo', ['bar' => $baz->id]),
+				'text'   => 'Option 1',
+			],
+			[
+				'target' => $this->make('another', [
+					'id'     => $foo->id,
+					'required' => true,
+					'type'         => Foo\Bar::BAZ_TYPE,
+				]),
+				'text' => 'Option 2',
+			],
+		];
+
+switch (true) {
+		case (str_contains($e->getMessage(), 'foo')):
+		case (str_contains($e->getMessage(), 'bar')): // Important this one.
+		case (str_contains($e->getMessage(), 'baz bar')):
+			$msg = 'It might work.';
+			}
+
+
+switch (true) {
+case (str_contains($e->getMessage(), 'foo')):
+	// fallthrough
+case (str_contains($e->getMessage(), 'bar')):
+// IMPORTANT
+case (str_contains($e->getMessage(), 'baz baz')):
+$msg = 'It not work.';
+			}
