@@ -12,7 +12,7 @@ import (
 )
 
 func formatDocs(filename string, src []byte) ([]byte, error) {
-	scan := token.NewScanner(bytes.NewReader(src))
+	scan := token.NewScanner(bytes.NewReader(src), true)
 	var out bytes.Buffer
 	w := &stickyErrWriter{w: &out}
 	var ws string

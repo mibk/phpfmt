@@ -35,8 +35,8 @@ type parser struct {
 
 // Parse parses a single PHP file. If an error occurs while parsing
 // (except io errors), the returned error will be of type *SyntaxError.
-func Parse(r io.Reader) (*File, error) {
-	p := &parser{scan: token.NewScanner(r)}
+func Parse(r io.Reader, php74Compat bool) (*File, error) {
+	p := &parser{scan: token.NewScanner(r, php74Compat)}
 	p.next() // init
 	doc := p.parseFile()
 	if p.err != nil {
@@ -224,7 +224,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 			token.If, token.Else, token.Switch, token.Match,
 			token.For, token.Foreach, token.Do, token.While,
 			token.Try, token.Catch, token.Finally,
-			token.Arrow, token.DoubleColon:
+			token.Hash, token.Arrow, token.DoubleColon:
 			nextScope = typ
 			s.kind = cmp.Or(s.kind, typ)
 			s.nodes = append(s.nodes, p.tok)
@@ -279,6 +279,8 @@ func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 					}
 					continue
 				}
+				return s
+			} else if typ == token.Lbrack && s.kind == token.Hash {
 				return s
 			}
 		case token.Qmark:

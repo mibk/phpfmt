@@ -122,6 +122,7 @@ type printer struct {
 	rmSpaceAfterScope bool
 
 	scopeType token.Type
+	lastScope token.Type
 	multiline bool
 	scopeOpen token.Type
 }
@@ -159,6 +160,7 @@ func (p *printer) print(args ...any) {
 				p.print(newline)
 			}
 		case *scope:
+			p.lastScope = arg.kind
 			switch arg.open {
 			case token.Lparen:
 				switch last := p.lastToken(); last {
@@ -278,7 +280,8 @@ func (p *printer) print(args ...any) {
 			}
 			p.print(arg.close)
 			if arg.close == token.Rbrace && !isFetchOperator(arg.kind) ||
-				arg.close == token.Rparen && arg.kind != token.OpenTag {
+				arg.close == token.Rparen && arg.kind != token.OpenTag ||
+				arg.kind == token.Hash {
 				p.print(space)
 			}
 			p.rmWSBeforeParen = false
@@ -488,7 +491,7 @@ func (p *printer) print(args ...any) {
 					if p.removeNextWS {
 						continue
 					}
-					if strings.Contains(arg.Text[:i], "\n") {
+					if strings.Contains(arg.Text[:i], "\n") && p.lastScope != token.Hash {
 						p.print(newline)
 					}
 					p.print(newline, p.indent)

@@ -67,7 +67,7 @@ actually have to be a <html>
 		"comments",
 		`<?php // line comment
 namespace /*block ?> */ DateTime/** comments*/;# another line comm? or?
-// early ?><?php # eof`,
+// early ?><?php #[JustAComment]`,
 		[]token.Token{
 			{token.OpenTag, "<?php", pos("1:1")},
 			{token.Whitespace, " ", pos("1:6")},
@@ -86,8 +86,8 @@ namespace /*block ?> */ DateTime/** comments*/;# another line comm? or?
 			{token.CloseTag, "?>", pos("3:10")},
 			{token.OpenTag, "<?php", pos("3:12")},
 			{token.Whitespace, " ", pos("3:17")},
-			{token.Comment, "# eof", pos("3:18")},
-			{token.EOF, "", pos("3:23")},
+			{token.Comment, "#[JustAComment]", pos("3:18")},
+			{token.EOF, "", pos("3:33")},
 		},
 	}, {
 		"misc",
@@ -474,11 +474,36 @@ while enum global readonly yield from match
 			{token.Comment, "/**/", pos("1:25")},
 			{token.EOF, "", pos("1:29")},
 		},
+	}, {
+		"#[attr]",
+		`<?php #[ \Basic] class Foo{}`,
+		[]token.Token{
+			{token.OpenTag, "<?php", pos("1:1")},
+			{token.Whitespace, " ", pos("1:6")},
+			{token.Hash, "#", pos("1:7")},
+			{token.Lbrack, "[", pos("1:8")},
+			{token.Whitespace, " ", pos("1:9")},
+			{token.Backslash, "\\", pos("1:10")},
+			{token.Ident, "Basic", pos("1:11")},
+			{token.Rbrack, "]", pos("1:16")},
+			{token.Whitespace, " ", pos("1:17")},
+			{token.Class, "class", pos("1:18")},
+			{token.Whitespace, " ", pos("1:23")},
+			{token.Ident, "Foo", pos("1:24")},
+			{token.Lbrace, "{", pos("1:27")},
+			{token.Rbrace, "}", pos("1:28")},
+			{token.EOF, "", pos("1:29")},
+		},
 	}}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sc := token.NewScanner(strings.NewReader(tt.input))
+			php74Compat := true
+			if strings.Contains(tt.name, "#[attr]") {
+				// A hack to switch mode.
+				php74Compat = false
+			}
+			sc := token.NewScanner(strings.NewReader(tt.input), php74Compat)
 
 			var got []token.Token
 			for {
@@ -545,7 +570,7 @@ nic
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sc := token.NewScanner(strings.NewReader(tt.input))
+			sc := token.NewScanner(strings.NewReader(tt.input), true)
 
 			for sc.Next().Type != token.EOF {
 			}
@@ -561,7 +586,7 @@ nic
 }
 
 func TestBadReader(t *testing.T) {
-	sc := token.NewScanner(new(badReader))
+	sc := token.NewScanner(new(badReader), true)
 	for sc.Next().Type != token.EOF {
 	}
 	errStr := "<nil>"

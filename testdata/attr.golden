@@ -1,0 +1,15 @@
+<?php
+
+#[\AllowDynamicProperties]
+class Foo
+{
+	private $x;
+
+	#[
+		Secret,
+		Exposed,
+	]
+	function bar(#[Private] $a)
+	{
+	}
+}

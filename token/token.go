@@ -76,6 +76,7 @@ const (
 	Rbrace    // }
 
 	At     // @
+	Hash   // #
 	BitNot // ~
 
 	Add      // +
@@ -204,6 +205,8 @@ const (
 )
 
 type Scanner struct {
+	php74Compat bool
+
 	r     *bufio.Reader
 	state uint
 	queue []Token
@@ -214,11 +217,12 @@ type Scanner struct {
 	lastLineLen int
 }
 
-func NewScanner(r io.Reader) *Scanner {
+func NewScanner(r io.Reader, php74Compat bool) *Scanner {
 	return &Scanner{
-		r:    bufio.NewReader(r),
-		line: 1,
-		col:  1,
+		php74Compat: php74Compat,
+		r:           bufio.NewReader(r),
+		line:        1,
+		col:         1,
 	}
 }
 
@@ -327,6 +331,9 @@ func (s *Scanner) scanAny() (tok Token) {
 			return Token{Type: Quo}
 		}
 	case '#':
+		if !s.php74Compat && s.peek() == '[' {
+			return Token{Type: Hash}
+		}
 		return s.scanLineComment("#")
 	case '$':
 		if id := s.scanIdent(); id != "" {

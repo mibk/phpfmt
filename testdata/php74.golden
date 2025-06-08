@@ -1,5 +1,7 @@
 <?php // PHP 70400
 
+#[ this \is just a regular comment ]
+
 // No trailing comma.
 callFn(
 	'arg1',

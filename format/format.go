@@ -40,7 +40,7 @@ func Pipe(filename string, out io.Writer, in io.Reader, opts naive.Options) erro
 }
 
 func formatCode(filename string, out io.Writer, in io.Reader, opts naive.Options) error {
-	file, err := naive.Parse(in)
+	file, err := naive.Parse(in, opts&naive.PHP74Compat > 0)
 	if se, ok := err.(*naive.SyntaxError); ok {
 		return fmt.Errorf("%s:%d:%d: %v", filename, se.Line, se.Column, se.Err)
 	} else if err != nil {
