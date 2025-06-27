@@ -49,7 +49,9 @@ func main() {
 		}
 
 		if !fi.IsDir() {
-			formatFile(filename, fi.Mode().Perm(), f)
+			if err := formatFile(filename, fi.Mode().Perm(), f); err != nil {
+				log.Fatal(err)
+			}
 			continue
 		}
 
