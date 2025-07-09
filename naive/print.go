@@ -35,7 +35,7 @@ const (
 func Fprint(w io.Writer, node any, options Options) error {
 	tw := tabwriter.NewWriter(w, 0, 0, 1, ' ', tabwriter.StripEscape)
 
-	// TODO: Make it concurent safe?
+	// TODO: Make it concurrent safe?
 	if options&PHP74Compat > 0 {
 		options &= ^TrailingComma
 

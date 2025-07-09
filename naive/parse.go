@@ -14,7 +14,7 @@ const (
 	metaTokenCast = 1024 + iota
 )
 
-// SyntaxError records an error and the position it occured on.
+// SyntaxError records an error and the position it occurred on.
 type SyntaxError struct {
 	Line, Column int
 	Err          error

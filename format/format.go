@@ -12,7 +12,7 @@ import (
 )
 
 // Pipe reads PHP source code from in, formats it, and writes the result to out.
-// The format can be sliglthly tweaked using opts. (See [naive.Options].)
+// The format can be slightly tweaked using opts. (See [naive.Options].)
 // The filename argument is used to set the “filename” in error messages.
 func Pipe(filename string, out io.Writer, in io.Reader, opts naive.Options) error {
 	src, err := io.ReadAll(in)
