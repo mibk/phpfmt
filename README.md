@@ -24,6 +24,13 @@
 
 ## Installation
 
+For now, the Go toolchain is required to install `phpfmt`.
+You do not need Go for anything other than the one-time installation.
+
+If you don't have Go installed, follow the instructions on the [official Go website](https://go.dev/dl/).
+
+Then, run the following command to install `phpfmt`:
+
     go install mibk.dev/phpfmt@latest
 
 ## Usage
