@@ -98,6 +98,29 @@ i.e. the code is parsed as `!($expr instanceof Foo)` rather than `(! $expr) inst
 +$a and $b??(string)$c;
 ```
 
+### PHP version awareness
+
+`phpfmt` is PHP version aware.
+It automatically reads the required PHP version from `composer.json`.
+It adjusts formatting based on the PHP version,
+especially for operator precedence changes and trailing commas.
+For example, the `.` operator's precedence changed in PHP 8.0.
+
+In **PHP 7.4**, where `.` and `+` had the same precedence, `phpfmt` outputs:
+
+```php
+echo 'Sum: ' . $a + $b;
+echo 'Shift: '.$a << 2;
+```
+
+For **PHP 8.0**, where both `+` and `<<` bind more tightly than `.`,
+`phpfmt` adjusts the spacing to make this clear:
+
+```php
+echo 'Sum: ' . $a+$b;
+echo 'Shift: ' . $a<<2;
+```
+
 ## Examples of formatted code in the wild
 
 | Project  | Commit                                                         |
