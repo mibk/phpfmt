@@ -49,3 +49,8 @@ return $x !== 1.;
 return $a||$b ?? (string)$c;
 
 return $a and $b??(string)$c;
+
+$result = "Hello".'World'
+	|> htmlentities(...) |> str_split(...);
+
+$user = $id|>get_username(...) ?? 'default';

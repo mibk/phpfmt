@@ -130,6 +130,7 @@ const (
 	QmarkArrow   // ?->
 	DoubleArrow  // =>
 	Spaceship    // <=>
+	Pipe         // |>
 	symbolEnd
 
 	keywordStart
@@ -487,11 +488,16 @@ func (s *Scanner) scanAny() (tok Token) {
 	case ';':
 		return Token{Type: Semicolon}
 	case '|':
-		if s.peek() == '|' {
+		switch r2 := s.peek(); r2 {
+		case '|':
 			s.read()
 			return Token{Type: Or}
+		case '>':
+			s.read()
+			return Token{Type: Pipe}
+		default:
+			return Token{Type: BitOr}
 		}
-		return Token{Type: BitOr}
 	case '&':
 		if s.peek() == '&' {
 			s.read()

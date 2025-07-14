@@ -2,6 +2,8 @@ package naive
 
 import "mibk.dev/phpfmt/token"
 
+const obviousPrecLevel = 10
+
 // See https://www.php.net/manual/en/language.operators.precedence.php
 var opTable = [...][]token.Type{
 	1: {token.Pow},
@@ -11,18 +13,19 @@ var opTable = [...][]token.Type{
 	6: {token.Add, token.Sub},
 	7: {token.BitShl, token.BitShr},
 	8: {token.Concat},
-	9: { // Equalize these artificially.
-		// 9
-		token.Lt, token.Gt, token.Leq, token.Geq,
+	9: {token.Pipe},
+	obviousPrecLevel: { // Equalize these artificially.
 		// 10
+		token.Lt, token.Gt, token.Leq, token.Geq,
+		// 11
 		token.Eq, token.Neq, token.Identical, token.NotIdentical, token.Spaceship,
 	},
-	11: {token.BitAnd},
-	12: {token.BitXor},
-	13: {token.BitOr},
-	14: {token.And},
-	15: {token.Or},
-	16: {token.Coalesce},
+	12: {token.BitAnd},
+	13: {token.BitXor},
+	14: {token.BitOr},
+	15: {token.And},
+	16: {token.Or},
+	17: {token.Coalesce},
 }
 
 var opPrec map[token.Type]int
@@ -40,7 +43,7 @@ func init() {
 func analyseOps(tokens []any) (max int) {
 	hasLowPrec := false
 	defer func() {
-		if hasLowPrec && max > 9 {
+		if hasLowPrec && max > obviousPrecLevel {
 			max = 22
 		}
 	}()
@@ -81,8 +84,7 @@ func analyseOps(tokens []any) (max int) {
 		if !ok {
 			continue
 		}
-		// Let's say with level-9, the precedence is obvious.
-		if prec > max && prec != 9 {
+		if prec > max && prec != obviousPrecLevel {
 			max = prec
 		}
 	}
