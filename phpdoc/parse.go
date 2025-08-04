@@ -405,10 +405,6 @@ func (p *parser) tryParseAtomicType() (_ phptype.Type, ok bool) {
 			}
 		}
 		if ok && p.got(token.DoubleColon) {
-			if nullable {
-				p.errorf("constant fetch cannot be nullable")
-				return nil, false
-			}
 			cf := &phptype.ConstFetch{Class: typ, Name: p.tok.Text}
 			switch p.tok.Type {
 			case token.Ident, token.Asterisk:

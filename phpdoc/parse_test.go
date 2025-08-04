@@ -222,10 +222,6 @@ func TestSyntaxErrors(t *testing.T) {
 			`line:1:17: unexpected ::`,
 		},
 		{
-			`/**@var ? DateTime::FORMAT */`,
-			`line:1:21: constant fetch cannot be nullable`,
-		},
-		{
 			`/**@var DateTime::ANY_ * */`,
 			`line:1:26: invalid position of *, did you mean to write ANY_*?`,
 		},

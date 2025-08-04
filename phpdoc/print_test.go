@@ -242,6 +242,11 @@ It's	deprecated now.
 ----
 /** @var string[] shouldn't be empty */
 `},
+	{"nullable const fetch", `
+/** @var ? InvoicePayment :: CATEGORY_* */
+----
+/** @var ?InvoicePayment::CATEGORY_* */
+`},
 }
 
 func TestPrinting(t *testing.T) {
