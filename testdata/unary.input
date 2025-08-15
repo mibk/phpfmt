@@ -35,6 +35,8 @@ if (!$foo->name instanceof Foo\Id);
 
 if ($type instanceof BarType || ! $type->canBar() || ! $type->hasItem($m));
 
+assert (!$type -> getRel () instanceof  OtherRel) ;
+
 return -$a ** 3 ;
 
 return$this->id&0x3;

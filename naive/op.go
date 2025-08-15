@@ -101,7 +101,7 @@ func nextOperatorIs(tokens []any, want token.Type) bool {
 	for _, y := range tokens {
 		op, ok := y.(token.Token)
 		if !ok {
-			break
+			continue
 		}
 		if op.Type == want {
 			return true
