@@ -235,7 +235,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 				switch tok, _ := v.(token.Token); tok.Type {
 				case token.Whitespace:
 					continue
-				case token.Echo, token.Print:
+				case token.Echo, token.Print, token.Static:
 					scope = token.Ident
 				case token.Ident, token.Var:
 					if nextScope != token.Function {

@@ -73,3 +73,13 @@ var_dump(AAAClass::{$searchableConstant});
 $a = new class() {
 }
 	->doesNotExist();
+
+return new static(
+	'foo',
+	'bar',
+);
+
+return new self(
+	'foo',
+	'bar',
+);
