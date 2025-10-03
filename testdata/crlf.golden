@@ -1,0 +1,16 @@
+<?php
+
+// line with
+
+/*
+Block comment
+*/
+
+/**
+ * @var int
+ */
+$a = 3;
+
+$b = 'mulit
+line
+text';

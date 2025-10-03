@@ -71,6 +71,10 @@ func Fprint(w io.Writer, node any, options Options) error {
 				buf.Flush()
 				tw.Flush()
 			}
+
+			// Normalize line endings to LF.
+			tok.Text = strings.ReplaceAll(tok.Text, "\r", "")
+
 			buf.WriteByte(tabwriter.Escape)
 			_, err = buf.WriteString(tok.Text)
 			buf.WriteByte(tabwriter.Escape)
