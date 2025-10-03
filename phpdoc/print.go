@@ -55,7 +55,7 @@ func (p *printer) print(args ...interface{}) {
 				firstLinePrinted := false
 				blankLine := false
 				for _, line := range arg.Lines {
-					if tl, ok := line.(*TextLine); ok && tl.Value == "*" {
+					if tl, ok := line.(*TextLine); ok && tl.Value == "" {
 						blankLine = firstLinePrinted
 						continue
 					}
@@ -114,11 +114,12 @@ func (p *printer) print(args ...interface{}) {
 func (p *printer) printLine(line Line) {
 	switch l := line.(type) {
 	case *TextLine:
-		if l.Value == "*" {
-			return
-		}
-		if line := strings.TrimPrefix(l.Value, "* "); line != "" {
-			p.print(tabesc, ' ', line, tabesc)
+		if line := l.Value; line != "" {
+			p.print(tabesc)
+			if !strings.HasPrefix(line, " ") {
+				p.print(' ')
+			}
+			p.print(line, tabesc)
 		}
 	case Tag:
 		p.print(' ')

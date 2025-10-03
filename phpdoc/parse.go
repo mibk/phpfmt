@@ -117,42 +117,39 @@ func (p *parser) parseDoc() *Block {
 		p.next0()
 	}
 	p.expect(token.OpenDoc)
-	if !p.got(token.Newline) {
-		doc.PreferOneline = true
-	}
-	doc.Lines = p.parseLines()
+	doc.Lines, doc.PreferOneline = p.parseLines()
 	p.expect(token.CloseDoc)
 	return doc
 }
 
-func (p *parser) parseLines() []Line {
-	var lines []Line
-	for p.tok.Type != token.CloseDoc {
-		lines = append(lines, p.parseLine())
-		if !p.got(token.Newline) {
-			break
-		}
-	}
-	return lines
-}
-
 // Line     = [ asterisk ] ( TextLine | Tag ) .
 // TextLine = Desc .
-func (p *parser) parseLine() Line {
-	p.consume(token.Whitespace)
-	var b strings.Builder
-	if p.tok.Type == token.Asterisk {
-		b.WriteString(p.tok.Text)
-		p.next0()
+func (p *parser) parseLines() (lines []Line, oneline bool) {
+	oneline = true
+	for p.tok.Type != token.CloseDoc && p.tok.Type != token.EOF {
+		if p.got(token.Newline) {
+			oneline = false
+			p.consume(token.Whitespace, token.Asterisk)
+		}
+		lines = append(lines, p.parseLine())
 	}
+	return
+}
+
+func (p *parser) parseLine() Line {
+	ws := ""
 	if p.tok.Type == token.Whitespace {
-		b.WriteString(p.tok.Text)
+		ws = p.tok.Text
 		p.next0()
 	}
 	if p.tok.Type == token.Tag {
 		return p.parseTag()
 	} else {
-		return &TextLine{Value: p.parseDesc(&b)}
+		d := p.parseDesc(nil)
+		if d != "" {
+			d = ws + d
+		}
+		return &TextLine{Value: d}
 	}
 }
 
