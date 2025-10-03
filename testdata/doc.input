@@ -9,3 +9,20 @@ namespace Foo;
 /** Maine classe */
 
 class Bar{}
+
+/**
+ *
+ *
+ * This is a variable doc.
+ *
+ *
+
+
+ *
+ *
+ * @var string
+ * @internal
+ *
+ *
+ */
+$var = 'string';

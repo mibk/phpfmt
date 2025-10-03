@@ -52,7 +52,18 @@ func (p *printer) print(args ...interface{}) {
 				p.print(arg.Lines[0])
 			} else {
 				p.print(newline)
+				firstLinePrinted := false
+				blankLine := false
 				for _, line := range arg.Lines {
+					if tl, ok := line.(*TextLine); ok && tl.Value == "*" {
+						blankLine = firstLinePrinted
+						continue
+					}
+					if blankLine {
+						p.print(tabesc, arg.Indent, tabesc, " *", newline)
+						blankLine = false
+					}
+					firstLinePrinted = true
 					p.print(tabesc, arg.Indent, tabesc, " *", line, newline)
 				}
 				p.print(tabesc, arg.Indent, tabesc)

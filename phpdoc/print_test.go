@@ -229,7 +229,6 @@ It's	deprecated now.
  * Formats
  *   - are    also
  *     - supported
- *
  */
 `},
 	{"non-params", `
@@ -273,6 +272,7 @@ func printerTestCase(t *testing.T, input, want string) {
 	if err := phpdoc.Fprint(got, doc); err != nil {
 		t.Fatalf("printing: unexpected err: %v", err)
 	}
+	t.Helper()
 	if got.String() != want {
 		t.Errorf("\n got: %s\nwant: %s", got, want)
 	}
