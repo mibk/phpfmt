@@ -171,9 +171,12 @@ func (s *Scanner) scanAny() Token {
 	case '$':
 		return s.scanVar()
 	case '*':
-		if s.peek() == '/' {
+		switch s.peek() {
+		case '/':
 			s.read()
 			return Token{Type: CloseDoc, Text: "*/"}
+		case '*':
+			return s.scanOther("*")
 		}
 		return Token{Type: Asterisk}
 	case '\\':

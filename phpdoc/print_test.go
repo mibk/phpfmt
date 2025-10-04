@@ -214,6 +214,20 @@ It's	deprecated now.
 ----
 /** *********** */
 `},
+	{"non-doc comment #1", `
+/** * * * * * */
+----
+/** * * * * * */
+`},
+	{"weird doc comment #2", `
+/**
+***********
+*/
+----
+/**
+ * ***********
+ */
+`},
 	{"do not format non-tag lines", `
 /**
 * Other
