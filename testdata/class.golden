@@ -83,3 +83,5 @@ return new self(
 	'foo',
 	'bar',
 );
+
+$b = new class implements \Iterable {};

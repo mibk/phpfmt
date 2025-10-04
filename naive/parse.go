@@ -229,6 +229,19 @@ func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 			s.kind = cmp.Or(s.kind, typ)
 			s.nodes = append(s.nodes, p.tok)
 			p.next()
+		case token.Extends, token.Implements:
+			for _, v := range slices.Backward(s.nodes) {
+				switch tok, _ := v.(token.Token); tok.Type {
+				case token.Whitespace:
+					continue
+				case token.Class:
+					// Let's use something that always places { on the same line.
+					nextScope = token.Fn
+				}
+				break
+			}
+			s.nodes = append(s.nodes, p.tok)
+			p.next()
 		case token.Lparen:
 			scope := nextScope
 			for _, v := range slices.Backward(s.nodes) {
