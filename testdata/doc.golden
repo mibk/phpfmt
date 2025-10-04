@@ -19,3 +19,9 @@ class Bar
  * @internal
  */
 $var = 'string';
+{
+	foo(
+		1
+	/** weird place for doc */
+	)
+}

@@ -26,3 +26,9 @@ class Bar{}
  *
  */
 $var = 'string';
+
+{
+foo(
+	1/** weird place for doc */
+)
+}

@@ -16,6 +16,7 @@ func formatDocs(filename string, src []byte) ([]byte, error) {
 	var out bytes.Buffer
 	w := &stickyErrWriter{w: &out}
 	var ws string
+	lastIsNL := false
 	firstDoc := true
 	var doc *phpdoc.Block
 Loop:
@@ -29,6 +30,9 @@ Loop:
 				if i >= 0 {
 					tok.Text = tok.Text[:i]
 				}
+			}
+			if !lastIsNL {
+				io.WriteString(w, "\n")
 			}
 			if err := phpdoc.Fprint(w, doc); err != nil {
 				return nil, fmt.Errorf("%s: printing doc: %v", filename, err)
@@ -60,6 +64,7 @@ Loop:
 			io.WriteString(w, ws)
 			ws = ""
 		}
+		lastIsNL = false
 		switch tok.Type {
 		case token.EOF:
 			break Loop
@@ -67,6 +72,7 @@ Loop:
 			i := strings.LastIndexByte(tok.Text, '\n')
 			io.WriteString(w, tok.Text[:i+1])
 			ws = tok.Text[i+1:]
+			lastIsNL = i >= 0
 		case token.Namespace, token.Class, token.Interface, token.Trait, token.Enum:
 			// Turn "file doc" off after these.
 			firstDoc = false
