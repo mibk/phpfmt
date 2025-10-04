@@ -292,6 +292,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 			} else {
 				s.nodes = append(s.nodes, qmark)
 				s.nodes = append(s.nodes, m.nodes...)
+				return s
 			}
 		case token.Colon:
 			if slices.Contains(separators, typ) {
