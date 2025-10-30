@@ -137,7 +137,8 @@ func TestParsingTypes(t *testing.T) {
 		},
 		{
 			typ: `class-string<T>`,
-			want: &generic{Base: &named{Parts: parts("class-string")},
+			want: &generic{
+				Base:       &named{Parts: parts("class-string")},
 				TypeParams: types(&named{Parts: parts("T")}),
 			},
 		},

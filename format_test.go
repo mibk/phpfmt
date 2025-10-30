@@ -79,5 +79,4 @@ func fmtInput(t *testing.T, src []byte, opts naive.Options) []byte {
 		t.Errorf("unexpected err: %v", err)
 	}
 	return buf.Bytes()
-
 }

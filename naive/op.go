@@ -86,7 +86,7 @@ func analyseOps(tokens []any) (max int) {
 			max = prec
 		}
 	}
-	return
+	return max
 }
 
 func decideOpSpaces(max int, op token.Type) (add, ok bool) {
@@ -124,5 +124,4 @@ func isOperator(typ token.Type) bool {
 		return false
 	}
 	return token.Add <= typ && typ <= token.Spaceship
-
 }

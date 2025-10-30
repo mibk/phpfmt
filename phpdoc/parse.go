@@ -133,7 +133,7 @@ func (p *parser) parseLines() (lines []Line, oneline bool) {
 		}
 		lines = append(lines, p.parseLine())
 	}
-	return
+	return lines, oneline
 }
 
 func (p *parser) parseLine() Line {
