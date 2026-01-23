@@ -65,10 +65,13 @@ func orderUseStmts(src []byte) []byte {
 		stmts = stmts[:0]
 	}
 
+	const namespace = "namespace "
 	const use = "use "
 	for line := range bytes.Lines(src) {
 		line := string(line)
-		if strings.HasPrefix(line, use) && !strings.Contains(line, "{") {
+		if name, ok := strings.CutPrefix(line, namespace); ok {
+			line = namespace + strings.TrimLeft(name, "\\")
+		} else if strings.HasPrefix(line, use) && !strings.Contains(line, "{") {
 			line = strings.TrimPrefix(line, use)
 			line = strings.TrimLeft(line, "\\")
 			stmts = append(stmts, use+line)

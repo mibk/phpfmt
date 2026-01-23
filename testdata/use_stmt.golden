@@ -1,6 +1,6 @@
 <?php
 
-namespace \Foo;
+namespace Foo;
 
 use AAAA;
 use BB;
