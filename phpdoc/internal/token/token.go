@@ -48,6 +48,7 @@ const (
 	Var
 	String
 	Int
+	Float
 	Other
 
 	symbolStart
@@ -208,14 +209,21 @@ func (s *Scanner) scanAny() Token {
 		}
 		return Token{Type: Colon}
 	case '.':
-		if s.peek() == '.' {
-			if s.read(); s.peek() == '.' {
-				s.read()
-				return Token{Type: Ellipsis}
+		switch r2 := s.peek(); {
+		case r2 == r:
+			s.read()
+			if s.peek() != r {
+				return Token{Type: Illegal, Text: ".."}
 			}
-			return s.scanOther("..")
+			s.read()
+			return Token{Type: Ellipsis}
+		case isDigit(r2):
+			b := new(strings.Builder)
+			b.WriteRune(r)
+			return s.scanFloat(b)
+		default:
+			return s.scanOther(".")
 		}
-		return s.scanOther(".")
 	case '|':
 		return Token{Type: Or}
 	case '&':
@@ -329,19 +337,6 @@ func (s *Scanner) scanSingleQuoted() Token {
 			return Token{Type: String, Text: b.String()}
 		}
 	}
-}
-
-func (s *Scanner) scanNumber(r rune) Token {
-	var b strings.Builder
-	b.WriteRune(r)
-	for isDigit(s.peek()) {
-		b.WriteRune(s.read())
-	}
-	return Token{Type: Int, Text: b.String()}
-}
-
-func isDigit(r rune) bool {
-	return '0' <= r && r <= '9'
 }
 
 func (s *Scanner) scanWhitespace(init rune) Token {

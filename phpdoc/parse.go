@@ -640,7 +640,7 @@ func (p *parser) parseNamedType() (_ *phptype.Named, ok bool) {
 func (p *parser) parseLitType() (_ *phptype.Literal, ok bool) {
 	lit := new(phptype.Literal)
 	switch p.tok.Type {
-	case token.String, token.Int, token.Ident:
+	case token.String, token.Int, token.Float, token.Ident:
 		lit.Value = p.tok.Text
 		p.next()
 		return lit, true

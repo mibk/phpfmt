@@ -147,7 +147,7 @@ It's	deprecated now.
 @param  callable (string$s='false' ,bool $b  =true, ) $nn
 @param callable(  ) :$this$m
 @param int... $y
-@return callable  ( int $a , int $b=3 ) :void
+@return callable  ( int $a , int $b=3 , float $c =.3 ) :void
 */
 ----
 /**
@@ -158,7 +158,7 @@ It's	deprecated now.
  * @param  callable(string $s = 'false', bool $b = true) $nn
  * @param  callable(): $this                             $m
  * @param  int                                           ...$y
- * @return callable(int $a, int $b = 3): void
+ * @return callable(int $a, int $b = 3, float $c = .3): void
  */
 `},
 	{"method tag", `
