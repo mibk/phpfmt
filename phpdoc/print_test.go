@@ -166,12 +166,14 @@ It's	deprecated now.
 @method  ? \ DateTime getDate( int| string$c ,)   the date of x
 @method translate (mixed& ... $args)does that for y
 @method  static  void  clean ( )
+@method print ( ... $args )
 */
 ----
 /**
  * @method ?\DateTime getDate(int|string $c) the date of x
  * @method translate(mixed &...$args)        does that for y
  * @method static void clean()
+ * @method print(...$args)
  */
 `},
 	{"const exprs", `

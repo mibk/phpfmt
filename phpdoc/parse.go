@@ -331,7 +331,19 @@ func (p *parser) parseOtherTag(name string) *OtherTag {
 
 // PHPType = AtomicType | UnionType | IntersectType .
 func (p *parser) parseType() phptype.Type {
-	typ := p.parseAtomicType()
+	typ := p.tryParseType()
+	if typ == nil {
+		p.errorf("expecting PHP type, found %v", p.tok)
+	}
+	return typ
+}
+
+func (p *parser) tryParseType() phptype.Type {
+	typ, ok := p.tryParseAtomicType()
+	if !ok {
+		return nil
+	}
+
 	switch p.tok.Type {
 	case token.Or:
 		return p.parseUnionType(typ)
@@ -480,10 +492,13 @@ func (p *parser) parseParamList() []*phptype.Param {
 	return params
 }
 
-// Param = PHPType [ [ "&" ] [ "..." ] varname ] .
+// Param = [ PHPType ] [ [ "&" ] [ "..." ] varname ] .
 func (p *parser) parseParam(needVar bool) *phptype.Param {
 	par := new(phptype.Param)
-	par.Type = p.parseType()
+	par.Type = p.tryParseType()
+	if par.Type == nil {
+		needVar = true
+	}
 	if p.got(token.And) {
 		needVar = true
 		par.ByRef = true

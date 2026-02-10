@@ -79,9 +79,14 @@ func (p *printer) print(args ...interface{}) {
 				if i > 0 {
 					p.print(token.Comma, ' ')
 				}
-				p.print(par.Type)
+				if par.Type != nil {
+					p.print(par.Type)
+					if par.Name != "" {
+						p.print(' ')
+					}
+				}
 				if par.Name != "" {
-					p.print(' ', par)
+					p.print(par)
 				}
 			}
 			p.print(token.Rparen)

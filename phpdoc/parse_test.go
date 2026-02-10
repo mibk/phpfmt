@@ -176,7 +176,7 @@ func TestSyntaxErrors(t *testing.T) {
 		},
 		{
 			"/**\n@param",
-			`line:2:7: expecting ( or basic type, found EOF`,
+			`line:2:7: expecting Var, found EOF`,
 		},
 		{
 			"/**\n@param array<int  string>",
@@ -184,7 +184,7 @@ func TestSyntaxErrors(t *testing.T) {
 		},
 		{
 			"/**\n@param array<int,, >",
-			`line:2:18: expecting ( or basic type, found ,`,
+			`line:2:18: expecting PHP type, found ,`,
 		},
 		{
 			"/**\n@param callable(int&)",
@@ -200,7 +200,7 @@ func TestSyntaxErrors(t *testing.T) {
 		},
 		{
 			"/**@method static $name*/",
-			`line:1:19: expecting ( or basic type, found Var("$name")`,
+			`line:1:19: expecting PHP type, found Var("$name")`,
 		},
 		{
 			"/**@method x():*/",
