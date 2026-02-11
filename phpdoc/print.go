@@ -12,7 +12,7 @@ import (
 )
 
 // Fprint "pretty-prints" an AST node to w.
-func Fprint(w io.Writer, node interface{}) error {
+func Fprint(w io.Writer, node any) error {
 	tw := tabwriter.NewWriter(w, 0, 0, 1, ' ', tabwriter.StripEscape)
 	buf := bufio.NewWriter(tw)
 	p := &printer{buf: buf}
@@ -39,7 +39,7 @@ const (
 	newline whitespace = '\n'
 )
 
-func (p *printer) print(args ...interface{}) {
+func (p *printer) print(args ...any) {
 	for _, arg := range args {
 		if p.err != nil {
 			return

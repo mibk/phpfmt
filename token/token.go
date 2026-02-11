@@ -259,7 +259,7 @@ func (s *Scanner) Next() (tok Token) {
 
 func (s *Scanner) Err() error { return s.err }
 
-func (s *Scanner) errorf(format string, args ...interface{}) Token {
+func (s *Scanner) errorf(format string, args ...any) Token {
 	if s.err == nil {
 		s.err = &ScanError{s.pos(), fmt.Errorf(format, args...)}
 	}

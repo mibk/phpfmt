@@ -16,7 +16,7 @@ func TestParsingDoc(t *testing.T) {
 
 	tests := []struct {
 		doc  string
-		want interface{}
+		want any
 	}{
 		{
 			doc:  `/** */`,

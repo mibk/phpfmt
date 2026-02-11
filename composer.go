@@ -14,8 +14,8 @@ import (
 var defaultOptions naive.Options
 
 func init() {
-	opts := strings.Split(os.Getenv("PHPFMT"), ",")
-	for _, opt := range opts {
+	opts := strings.SplitSeq(os.Getenv("PHPFMT"), ",")
+	for opt := range opts {
 		switch opt = strings.TrimSpace(opt); opt {
 		default:
 			log.Printf("phpfmt: Unknown option %q", opt)
