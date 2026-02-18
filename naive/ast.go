@@ -19,10 +19,10 @@ type Block struct {
 	offsetEndParen bool
 	indented       bool
 	fixComma       bool
-	nodes          []*stmt
+	nodes          []*Stmt
 }
 
-type stmt struct {
+type Stmt struct {
 	kind       token.Type
 	isLabel    bool
 	multiline  bool
@@ -34,7 +34,7 @@ func (b *Block) oneliner() bool {
 	return b.open == token.Lbrace && !b.multiline && !isFetchOperator(b.kind) && len(b.nodes) > 0
 }
 
-func (s *stmt) lastTok() token.Type {
+func (s *Stmt) lastTok() token.Type {
 	for _, x := range slices.Backward(s.nodes) {
 		tok, ok := x.(token.Token)
 		if !ok {

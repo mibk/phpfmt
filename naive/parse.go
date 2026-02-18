@@ -194,8 +194,8 @@ func (p *parser) parseBlock(kind, open token.Type) (b *Block) {
 	return b
 }
 
-func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
-	s = new(stmt)
+func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
+	s = new(Stmt)
 	nextBlock := token.OpenTag
 	for {
 		if p.tok.Type.IsKeyword() {

@@ -319,7 +319,7 @@ func (p *printer) print(args ...any) {
 			}
 			p.print(token.Colon, space)
 			p.rmWSBeforeParen = false
-		case *stmt:
+		case *Stmt:
 			var extraIndented indentation
 			fatArrow := false
 			stmtReallyIndented := false
