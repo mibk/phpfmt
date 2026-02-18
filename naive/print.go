@@ -15,7 +15,7 @@ import (
 type Options uint8
 
 const (
-	// TrailingComma enables adding trailing commas in all [] and () scopes.
+	// TrailingComma enables adding trailing commas in all [] and () blocks.
 	TrailingComma Options = 1 << iota
 
 	// AlignColumns causes Fprint to align elements in columns using spaces.
@@ -123,12 +123,12 @@ type printer struct {
 	mightDeindent   bool
 
 	maxPrec           int
-	rmSpaceAfterScope bool
+	rmSpaceAfterBlock bool
 
-	scopeType token.Type
-	lastScope token.Type
+	blockType token.Type
+	lastBlock token.Type
 	multiline bool
-	scopeOpen token.Type
+	blockOpen token.Type
 }
 
 type whitespace byte
@@ -153,7 +153,7 @@ func (p *printer) print(args ...any) {
 				d.Text = strings.TrimLeft(d.Text, " \t\n")
 				p.print(*d)
 			}
-			p.print(arg.scope)
+			p.print(arg.block)
 			fixed := p.removeAnyWS()
 			if d := p.removeLast(token.InlineHTML); d != nil {
 				d := d.(token.Token)
@@ -163,8 +163,8 @@ func (p *printer) print(args ...any) {
 			if !fixed {
 				p.print(newline)
 			}
-		case *scope:
-			p.lastScope = arg.kind
+		case *Block:
+			p.lastBlock = arg.kind
 			switch arg.open {
 			case token.Lparen:
 				switch last := p.lastToken(); last {
@@ -219,17 +219,17 @@ func (p *printer) print(args ...any) {
 			}
 
 			m := p.multiline
-			t := p.scopeType
-			o := p.scopeOpen
-			p.scopeType = arg.kind
+			t := p.blockType
+			o := p.blockOpen
+			p.blockType = arg.kind
 			p.multiline = arg.multiline || arg.open == token.OpenTag
-			p.scopeOpen = arg.open
+			p.blockOpen = arg.open
 			for _, x := range arg.nodes {
 				p.print(x)
 			}
 			p.multiline = m
-			p.scopeType = t
-			p.scopeOpen = o
+			p.blockType = t
+			p.blockOpen = o
 
 			// This prevents bad formatting of a switch stmt
 			// ending with an empty branch.
@@ -348,8 +348,8 @@ func (p *printer) print(args ...any) {
 				addSpace := false
 				switch x := x.(type) {
 				case token.Token:
-					if p.rmSpaceAfterScope {
-						p.rmSpaceAfterScope = false
+					if p.rmSpaceAfterBlock {
+						p.rmSpaceAfterBlock = false
 						p.removeNextWS = true
 					}
 					switch rest := arg.nodes[index+1:]; x.Type {
@@ -452,7 +452,7 @@ func (p *printer) print(args ...any) {
 					x.stmtAlreadyIndented = doesContinue || stmtReallyIndented
 					x.extraIndented = &extraIndented
 					x.doesContinue = &doesContinue
-				case *scope:
+				case *Block:
 					maxPrec = -1
 					if doesContinue && x.multiline && x.open == token.Lbrace {
 						p.indent--
@@ -495,7 +495,7 @@ func (p *printer) print(args ...any) {
 					if p.removeNextWS {
 						continue
 					}
-					if strings.Contains(arg.Text[:i], "\n") && p.lastScope != token.Hash {
+					if strings.Contains(arg.Text[:i], "\n") && p.lastBlock != token.Hash {
 						p.print(newline)
 					}
 					p.print(newline, p.indent)
@@ -557,14 +557,14 @@ func (p *printer) print(args ...any) {
 				fallthrough
 			case token.Private, token.Protected, token.Public,
 				token.Readonly, token.Final:
-				if p.scopeOpen == token.Lbrace {
+				if p.blockOpen == token.Lbrace {
 					p.alignNextAssign = true
 				}
 			case token.Assign:
 				p.removeLast(space)
 				if p.alignNextAssign {
 					p.print(nextcol)
-				} else if p.scopeType != token.Declare {
+				} else if p.blockType != token.Declare {
 					p.print(space)
 				}
 			case token.DoubleArrow:
@@ -635,7 +635,7 @@ func (p *printer) print(args ...any) {
 
 			switch arg.Type {
 			case token.Assign:
-				if p.scopeType == token.Declare {
+				if p.blockType == token.Declare {
 					p.removeNextWS = true
 					break
 				}

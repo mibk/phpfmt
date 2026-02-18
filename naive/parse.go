@@ -96,60 +96,60 @@ func (p *parser) parseFile() *File {
 		return nil
 	}
 
-	file.scope = p.parseScope(token.Illegal, token.OpenTag)
-	file.scope.indented = false
-	file.scope.offsetEndParen = false
+	file.block = p.parseBlock(token.Illegal, token.OpenTag)
+	file.block.indented = false
+	file.block.offsetEndParen = false
 	return file
 }
 
-func (p *parser) parseScope(kind, open token.Type) (s *scope) {
+func (p *parser) parseBlock(kind, open token.Type) (b *Block) {
 	defer func() {
-		if s.open == token.Lbrace && s.kind != token.Fn && (len(s.nodes) == 0 || !isFetchOperator(s.kind)) {
-			s.multiline = true
+		if b.open == token.Lbrace && b.kind != token.Fn && (len(b.nodes) == 0 || !isFetchOperator(b.kind)) {
+			b.multiline = true
 		}
-		if s.multiline {
-			s.indented = true
+		if b.multiline {
+			b.indented = true
 		}
 	}()
-	s = &scope{kind: kind, open: open}
+	b = &Block{kind: kind, open: open}
 	switch open {
 	default:
 		panic(fmt.Sprintf("unknown pair for %v", open))
 	case token.OpenTag:
-		s.close = token.EOF
+		b.close = token.EOF
 	case token.Lbrace:
-		s.close = token.Rbrace
+		b.close = token.Rbrace
 		if kind == token.Match {
-			s.fixComma = true
+			b.fixComma = true
 		}
 	case token.Lparen:
-		s.close = token.Rparen
+		b.close = token.Rparen
 		switch kind {
 		case token.Ident, token.Var:
 			kind = token.Illegal
 			fallthrough
 		case token.Function:
-			s.fixComma = true
+			b.fixComma = true
 		}
 	case token.Lbrack:
-		s.close = token.Rbrack
-		s.fixComma = true
+		b.close = token.Rbrack
+		b.fixComma = true
 	}
 
 	if p.tok.Type == token.Whitespace {
-		s.multiline = strings.Contains(p.tok.Text, "\n")
+		b.multiline = strings.Contains(p.tok.Text, "\n")
 		p.next()
 	}
-	if !s.multiline && p.tok.Type == token.Comment && isLineComment(p.tok) {
-		s.commentTag = new(token.Token)
-		*s.commentTag = p.tok
+	if !b.multiline && p.tok.Type == token.Comment && isLineComment(p.tok) {
+		b.commentTag = new(token.Token)
+		*b.commentTag = p.tok
 		p.next()
 		p.got(token.Whitespace)
-		s.multiline = true
+		b.multiline = true
 	}
 
 	sep := token.Semicolon
-	if s.fixComma {
+	if b.fixComma {
 		sep = token.Comma
 	}
 	for {
@@ -166,37 +166,37 @@ func (p *parser) parseScope(kind, open token.Type) (s *scope) {
 					p.next()
 				}
 			}
-			s.nodes = append(s.nodes, stmt)
+			b.nodes = append(b.nodes, stmt)
 		}
-		if s.open != token.Lbrace {
+		if b.open != token.Lbrace {
 			stmt.isLabel = false
 		}
 		if stmt.multiline {
-			s.indented = true
+			b.indented = true
 		}
 
-		if s.open == token.Lparen && s.kind == token.Function {
+		if b.open == token.Lparen && b.kind == token.Function {
 			stmt.kind = token.Function
-		} else if s.open == token.Lbrace && s.kind == token.Class {
+		} else if b.open == token.Lbrace && b.kind == token.Class {
 			stmt.kind = token.Class
 		}
 
 		switch typ := p.tok.Type; typ {
-		case s.close:
-			s.offsetEndParen = s.indented && stmt.trailingNL
+		case b.close:
+			b.offsetEndParen = b.indented && stmt.trailingNL
 			p.next()
-			return s
+			return b
 		case token.EOF, token.Rparen, token.Rbrace, token.Rbrack:
 			p.errorf("unexpected %v", typ)
-			return s
+			return b
 		}
 	}
-	return s
+	return b
 }
 
 func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 	s = new(stmt)
-	nextScope := token.OpenTag
+	nextBlock := token.OpenTag
 	for {
 		if p.tok.Type.IsKeyword() {
 			switch last := s.lastTok(); last {
@@ -225,7 +225,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 			token.For, token.Foreach, token.Do, token.While,
 			token.Try, token.Catch, token.Finally,
 			token.Hash, token.Arrow, token.DoubleColon:
-			nextScope = typ
+			nextBlock = typ
 			s.kind = cmp.Or(s.kind, typ)
 			s.nodes = append(s.nodes, p.tok)
 			p.next()
@@ -236,32 +236,32 @@ func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 					continue
 				case token.Class:
 					// Let's use something that always places { on the same line.
-					nextScope = token.Fn
+					nextBlock = token.Fn
 				}
 				break
 			}
 			s.nodes = append(s.nodes, p.tok)
 			p.next()
 		case token.Lparen:
-			scope := nextScope
+			block := nextBlock
 			for _, v := range slices.Backward(s.nodes) {
 				switch tok, _ := v.(token.Token); tok.Type {
 				case token.Whitespace:
 					continue
 				case token.Echo, token.Print, token.Static:
-					scope = token.Ident
+					block = token.Ident
 				case token.Ident, token.Var:
-					if nextScope != token.Function {
-						scope = tok.Type
+					if nextBlock != token.Function {
+						block = tok.Type
 					}
 				case token.Class, token.Function:
 					// Let's use something that always places { on the same line.
-					nextScope = token.Fn
+					nextBlock = token.Fn
 				}
 				break
 			}
 			p.next()
-			sub := p.parseScope(scope, typ)
+			sub := p.parseBlock(block, typ)
 			if sub.close == token.Rparen && len(sub.nodes) == 1 {
 				stmt := sub.nodes[0]
 				if len(stmt.nodes) == 1 {
@@ -276,7 +276,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *stmt) {
 		case token.Lbrace, token.Lbrack:
 			s.kind = cmp.Or(s.kind, typ)
 			p.next()
-			sub := p.parseScope(nextScope, typ)
+			sub := p.parseBlock(nextBlock, typ)
 			s.nodes = append(s.nodes, sub)
 			if typ == token.Lbrace {
 				// In most cases, } marks an end of a statement.

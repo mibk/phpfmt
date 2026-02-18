@@ -8,10 +8,10 @@ import (
 
 type File struct {
 	htmlPreamble *token.Token
-	scope        *scope
+	block        *Block
 }
 
-type scope struct {
+type Block struct {
 	kind           token.Type
 	open, close    token.Type
 	commentTag     *token.Token
@@ -30,8 +30,8 @@ type stmt struct {
 	nodes      []any
 }
 
-func (s *scope) oneliner() bool {
-	return s.open == token.Lbrace && !s.multiline && !isFetchOperator(s.kind) && len(s.nodes) > 0
+func (b *Block) oneliner() bool {
+	return b.open == token.Lbrace && !b.multiline && !isFetchOperator(b.kind) && len(b.nodes) > 0
 }
 
 func (s *stmt) lastTok() token.Type {
