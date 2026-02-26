@@ -38,11 +38,11 @@ type parser struct {
 func Parse(r io.Reader, php74Compat bool) (*File, error) {
 	p := &parser{scan: token.NewScanner(r, php74Compat)}
 	p.next() // init
-	doc := p.parseFile()
+	file := p.parseFile()
 	if p.err != nil {
 		return nil, p.err
 	}
-	return doc, nil
+	return file, nil
 }
 
 func (p *parser) next() {
@@ -199,7 +199,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 	nextBlock := token.OpenTag
 	for {
 		if p.tok.Type.IsKeyword() {
-			switch last := s.lastTok(); last {
+			switch last := s.lastType(); last {
 			case token.Arrow, token.DoubleColon, token.Function, token.Const:
 				p.tok.Type = token.Ident
 			}
@@ -342,7 +342,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 				return s
 			}
 		case token.BitAnd, token.Add, token.Sub:
-			switch last := s.lastTok(); {
+			switch last := s.lastType(); {
 			case last == token.Illegal, last == token.Colon,
 				isOperator(last),
 				last.IsKeyword():

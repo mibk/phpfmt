@@ -48,7 +48,7 @@ func Fprint(w io.Writer, node any, options Options) error {
 		}()
 	}
 
-	p := &printer{config: options}
+	p := &printer{options: options}
 	p.print(node)
 	if p.err != nil {
 		return p.err
@@ -109,21 +109,21 @@ func Fprint(w io.Writer, node any, options Options) error {
 type indentation int
 
 type printer struct {
-	config Options
+	options Options
 
 	tokens []any
 	err    error // sticky
 
-	prevIndent indentation
-	indent     indentation
+	srcIndent indentation
+	indent    indentation
 
-	alignNextAssign bool
-	removeNextWS    bool
-	rmWSBeforeParen bool
-	mightDeindent   bool
+	alignNextAssign    bool
+	skipNextSpace      bool
+	skipSpaceBeforeParen bool
+	mightDeindent      bool
 
-	maxPrec           int
-	rmSpaceAfterBlock bool
+	maxPrec            int
+	skipSpaceAfterBlock bool
 
 	blockType token.Type
 	lastBlock token.Type
@@ -154,7 +154,7 @@ func (p *printer) print(args ...any) {
 				p.print(*d)
 			}
 			p.print(arg.block)
-			fixed := p.removeAnyWS()
+			fixed := p.removeTrailingWS()
 			if d := p.removeLast(token.InlineHTML); d != nil {
 				d := d.(token.Token)
 				d.Text = strings.TrimRight(d.Text, " \t\n")
@@ -170,7 +170,7 @@ func (p *printer) print(args ...any) {
 				switch last := p.lastToken(); last {
 				case token.Rparen, token.Rbrack,
 					token.Declare, token.Class, token.Function, token.Fn:
-					p.removeAnyWS()
+					p.removeTrailingWS()
 				}
 			case token.Lbrack:
 				switch last := p.lastToken(); last {
@@ -182,7 +182,7 @@ func (p *printer) print(args ...any) {
 					// For implicit blocks, do nothing.
 					break
 				}
-				nl := p.removeAnyWS()
+				nl := p.removeTrailingWS()
 				switch arg.kind {
 				case token.Arrow, token.DoubleColon:
 				case token.OpenTag, token.Class, token.Interface, token.Trait, token.Enum,
@@ -195,7 +195,7 @@ func (p *printer) print(args ...any) {
 					p.print(space)
 				}
 			}
-			if arg.open != token.Lbrace && p.rmWSBeforeParen {
+			if arg.open != token.Lbrace && p.skipSpaceBeforeParen {
 				p.removeLast(space)
 			}
 			p.print(arg.open)
@@ -235,7 +235,7 @@ func (p *printer) print(args ...any) {
 			// ending with an empty branch.
 			p.removeLast(p.indent)
 			p.removeLast(newline)
-			p.removeNextWS = false
+			p.skipNextSpace = false
 
 			if arg.indented {
 				p.indent--
@@ -245,7 +245,7 @@ func (p *printer) print(args ...any) {
 				p.removeLast(space)
 				p.print(space)
 			} else if arg.multiline || arg.offsetEndParen {
-				if p.config&TrailingComma > 0 && arg.fixComma && len(arg.nodes) > 0 {
+				if p.options&TrailingComma > 0 && arg.fixComma && len(arg.nodes) > 0 {
 					p.removeLast(space)
 					c := p.removeLast(token.Comment)
 					p.removeLast(space)
@@ -288,11 +288,11 @@ func (p *printer) print(args ...any) {
 				arg.kind == token.Hash {
 				p.print(space)
 			}
-			p.rmWSBeforeParen = false
+			p.skipSpaceBeforeParen = false
 		case *ternaryMiddle:
 			p.removeLast(space)
 			p.print(space, token.Qmark, space)
-			p.rmWSBeforeParen = false
+			p.skipSpaceBeforeParen = false
 			hasAny := false
 			indented := false
 			for _, x := range arg.nodes {
@@ -318,7 +318,7 @@ func (p *printer) print(args ...any) {
 				p.print(space)
 			}
 			p.print(token.Colon, space)
-			p.rmWSBeforeParen = false
+			p.skipSpaceBeforeParen = false
 		case *Stmt:
 			var extraIndented indentation
 			fatArrow := false
@@ -348,9 +348,9 @@ func (p *printer) print(args ...any) {
 				addSpace := false
 				switch x := x.(type) {
 				case token.Token:
-					if p.rmSpaceAfterBlock {
-						p.rmSpaceAfterBlock = false
-						p.removeNextWS = true
+					if p.skipSpaceAfterBlock {
+						p.skipSpaceAfterBlock = false
+						p.skipNextSpace = true
 					}
 					switch rest := arg.nodes[index+1:]; x.Type {
 					case token.DoubleArrow, token.Assign:
@@ -416,7 +416,7 @@ func (p *printer) print(args ...any) {
 						if !arg.isLabel || !isLineComment(x) {
 							break
 						}
-						if p.prevIndent > p.indent {
+						if p.srcIndent > p.indent {
 							p.removeLast(p.indent)
 							p.print(p.indent + 1)
 						}
@@ -474,32 +474,32 @@ func (p *printer) print(args ...any) {
 			p.indent -= extraIndented
 			if arg.isLabel {
 				p.print(newline, p.indent)
-				p.removeNextWS = true
+				p.skipNextSpace = true
 			}
 			p.alignNextAssign = false
 			switch arg.kind {
 			case token.Namespace, token.Declare:
 				p.print(newline, newline, p.indent)
-				p.removeNextWS = true
+				p.skipNextSpace = true
 			}
 		case token.Token:
 			if arg.Type == token.Whitespace {
 				if i := strings.LastIndexByte(arg.Text, '\n'); i >= 0 {
-					p.prevIndent = 0
+					p.srcIndent = 0
 					for _, r := range arg.Text[i+1:] {
 						if r != '\t' {
 							break
 						}
-						p.prevIndent++
+						p.srcIndent++
 					}
-					if p.removeNextWS {
+					if p.skipNextSpace {
 						continue
 					}
 					if strings.Contains(arg.Text[:i], "\n") && p.lastBlock != token.Hash {
 						p.print(newline)
 					}
 					p.print(newline, p.indent)
-				} else if !p.removeNextWS {
+				} else if !p.skipNextSpace {
 					p.removeLast(space)
 					// Do not print space after Foo::{$expr}
 					if p.lastToken() != token.Rbrace {
@@ -508,8 +508,8 @@ func (p *printer) print(args ...any) {
 				}
 				continue
 			}
-			p.removeNextWS = false
-			p.rmWSBeforeParen = false
+			p.skipNextSpace = false
+			p.skipSpaceBeforeParen = false
 			printSpaceAfter := false
 			switch arg.Type {
 			case token.Illegal:
@@ -531,18 +531,18 @@ func (p *printer) print(args ...any) {
 					// Ignore this one.
 					continue
 				}
-				p.mightDeindent = p.prevIndent < p.indent
+				p.mightDeindent = p.srcIndent < p.indent
 				p.removeLast(space)
 				if !p.justIndented() {
 					p.print(nextcol)
 				}
 			case token.If:
 				if p.lastToken() == token.Else {
-					p.removeAnyWS()
+					p.removeTrailingWS()
 				}
 			case token.Else, token.Catch, token.Finally:
 				if p.lastToken() == token.Rbrace {
-					p.removeAnyWS()
+					p.removeTrailingWS()
 					p.print(space)
 				}
 			case token.Use:
@@ -553,7 +553,7 @@ func (p *printer) print(args ...any) {
 			case token.Const, token.Case:
 				p.alignNextAssign = true
 			case token.Static:
-				p.rmWSBeforeParen = true
+				p.skipSpaceBeforeParen = true
 				fallthrough
 			case token.Private, token.Protected, token.Public,
 				token.Readonly, token.Final:
@@ -580,12 +580,12 @@ func (p *printer) print(args ...any) {
 				if ws := p.removeLast(space); ws != nil && p.lastToken() != token.Ident {
 					p.print(ws)
 				}
-				p.removeNextWS = true
+				p.skipNextSpace = true
 			case token.Arrow, token.QmarkArrow, token.DoubleColon:
 				p.removeLast(space)
 				fallthrough
 			case token.Qmark, token.BitNot, token.At, token.Not, token.Dollar, token.Ellipsis:
-				p.removeNextWS = true
+				p.skipNextSpace = true
 			case metaTokenCast:
 				switch last := p.lastToken(); last {
 				// TODO: The ] feels like a hack,
@@ -595,7 +595,7 @@ func (p *printer) print(args ...any) {
 				}
 				if add, ok := decideOpSpaces(p.maxPrec, arg.Type); ok {
 					printSpaceAfter = add
-					p.removeNextWS = !add
+					p.skipNextSpace = !add
 				}
 			case token.Var:
 				if last := p.lastToken(); last == token.Ident {
@@ -604,7 +604,7 @@ func (p *printer) print(args ...any) {
 				}
 				fallthrough
 			case token.Ident:
-				p.rmWSBeforeParen = true
+				p.skipSpaceBeforeParen = true
 			case token.Inc, token.Dec:
 				switch last := p.lastToken(); last {
 				// TODO: The ] feels like a hack.
@@ -613,7 +613,7 @@ func (p *printer) print(args ...any) {
 				case token.Ident, token.Var, token.Rbrack:
 					p.removeLast(space)
 				default:
-					p.removeNextWS = true
+					p.skipNextSpace = true
 				}
 			default:
 				if add, ok := decideOpSpaces(p.maxPrec, arg.Type); ok {
@@ -622,7 +622,7 @@ func (p *printer) print(args ...any) {
 						p.print(space)
 						printSpaceAfter = true
 					} else {
-						p.removeNextWS = true
+						p.skipNextSpace = true
 					}
 				} else if spacesAround(arg.Type) {
 					p.removeLast(space)
@@ -636,14 +636,14 @@ func (p *printer) print(args ...any) {
 			switch arg.Type {
 			case token.Assign:
 				if p.blockType == token.Declare {
-					p.removeNextWS = true
+					p.skipNextSpace = true
 					break
 				}
 				fallthrough
 			case token.Comma:
 				p.print(space)
 			default:
-				if !p.removeNextWS && (printSpaceAfter || spaceAfter(arg.Type)) {
+				if !p.skipNextSpace && (printSpaceAfter || spaceAfter(arg.Type)) {
 					p.print(space)
 				}
 			}
@@ -696,7 +696,7 @@ func (p *printer) justIndented() bool {
 	return false
 }
 
-func (p *printer) removeAnyWS() (fixed bool) {
+func (p *printer) removeTrailingWS() (fixed bool) {
 	for len(p.tokens) > 0 {
 		i := len(p.tokens) - 1
 		_, isWS := p.tokens[i].(whitespace)

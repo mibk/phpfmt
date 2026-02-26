@@ -34,7 +34,7 @@ func (b *Block) oneliner() bool {
 	return b.open == token.Lbrace && !b.multiline && !isFetchOperator(b.kind) && len(b.nodes) > 0
 }
 
-func (s *Stmt) lastTok() token.Type {
+func (s *Stmt) lastType() token.Type {
 	for _, x := range slices.Backward(s.nodes) {
 		tok, ok := x.(token.Token)
 		if !ok {
