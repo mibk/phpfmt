@@ -117,12 +117,11 @@ type printer struct {
 	srcIndent indentation
 	indent    indentation
 
-	alignNextAssign    bool
-	skipNextSpace      bool
+	alignNextAssign      bool
+	skipNextSpace        bool
 	skipSpaceBeforeParen bool
-	mightDeindent      bool
 
-	maxPrec            int
+	maxPrec             int
 	skipSpaceAfterBlock bool
 
 	blockType token.Type
@@ -531,7 +530,6 @@ func (p *printer) print(args ...any) {
 					// Ignore this one.
 					continue
 				}
-				p.mightDeindent = p.srcIndent < p.indent
 				p.removeLast(space)
 				if !p.justIndented() {
 					p.print(nextcol)

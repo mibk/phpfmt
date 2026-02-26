@@ -27,10 +27,9 @@ func (e *SyntaxError) Error() string {
 type parser struct {
 	scan *token.Scanner
 
-	err  error
-	tok  token.Token
-	prev token.Token
-	alt  *token.Token // on backup
+	err error
+	tok token.Token
+	alt *token.Token // on backup
 }
 
 // Parse parses a single PHP file. If an error occurs while parsing
