@@ -1,6 +1,6 @@
 <?php
 
-Class AAA
+class AAA
 {
 	public /*static*/ function __construct()
 	{
@@ -20,7 +20,7 @@ if (aa) {
 	do1();
 } elseif (bb) {
 	do2();
-} Else {
+} else {
 	do3();
 }
 
@@ -46,7 +46,7 @@ for (;;) {
 	do7();
 }
 
-Foreach ($$ff as $f) {
+foreach ($$ff as $f) {
 	do8();
 }
 
@@ -81,7 +81,7 @@ trait UnitTrait
 enum Sex
 {
 	case MALE   = 'male';
-	Case FEMALE = 'female';
+	case FEMALE = 'female';
 }
 
 $first = $this->getItems()[0];

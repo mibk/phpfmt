@@ -28,7 +28,7 @@ class Issue extends Base\Entity
 		self::match();
 
 		if (true &&
-			FALSE // tohle
+			false // tohle
 		) {
 			echo 'unreachable';
 		}
@@ -177,7 +177,7 @@ function bar()
 
 enum RangeEnumType: string
 {
-	case FROM = 'from';
+	case from = 'from';
 	case TO   = 'to';
 }
 

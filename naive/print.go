@@ -21,6 +21,10 @@ const (
 	// AlignColumns causes Fprint to align elements in columns using spaces.
 	AlignColumns
 
+	// LowercaseKeywords normalizes all PHP keywords and the
+	// constants true, false, and null to lowercase.
+	LowercaseKeywords
+
 	// PHP74Compat switches formatting to PHP 7.4 compatibility mode.
 	//
 	// - This will remove support for trailing comma.
@@ -28,7 +32,7 @@ const (
 	PHP74Compat
 
 	// Standard is the default, “standard” formatting style.
-	Standard = TrailingComma | AlignColumns
+	Standard = TrailingComma | AlignColumns | LowercaseKeywords
 )
 
 // Fprint pretty-prints an AST node to w.
@@ -629,6 +633,16 @@ func (p *printer) print(args ...any) {
 			}
 
 			arg.Pos = token.Pos{}
+			if p.options&LowercaseKeywords > 0 {
+				if arg.Type.IsKeyword() {
+					arg.Text = arg.Type.String()
+				} else if arg.Type == token.Ident {
+					switch strings.ToLower(arg.Text) {
+					case "true", "false", "null":
+						arg.Text = strings.ToLower(arg.Text)
+					}
+				}
+			}
 			p.tokens = append(p.tokens, arg)
 
 			switch arg.Type {
