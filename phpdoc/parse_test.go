@@ -43,6 +43,34 @@ func TestParsingDoc(t *testing.T) {
 				PreferOneline: true,
 			},
 		},
+		{
+			doc: `/** @method static Type list($default = []) */`,
+			want: &phpdoc.Block{
+				Lines: lines(&phpdoc.MethodTag{
+					Static: true,
+					Result: typ("Type"),
+					Name:   "list",
+					Params: []*phptype.Param{
+						{Name: "default", Default: &phptype.Literal{Value: "[]"}},
+					},
+				}),
+				PreferOneline: true,
+			},
+		},
+		{
+			doc: `/** @method Type foo($a, $b = []) */`,
+			want: &phpdoc.Block{
+				Lines: lines(&phpdoc.MethodTag{
+					Result: typ("Type"),
+					Name:   "foo",
+					Params: []*phptype.Param{
+						{Name: "a"},
+						{Name: "b", Default: &phptype.Literal{Value: "[]"}},
+					},
+				}),
+				PreferOneline: true,
+			},
+		},
 	}
 
 	for _, tt := range tests {

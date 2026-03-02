@@ -477,11 +477,16 @@ func (p *parser) parseParamList() []*phptype.Param {
 	for !p.got(token.Rparen) && !p.got(token.EOF) {
 		par := p.parseParam(false)
 		if p.got(token.Assign) {
-			lit, ok := p.parseLitType()
-			if !ok {
-				p.errorf("expecting literal value, found %v", p.tok)
+			if p.got(token.Lbrack) {
+				p.expect(token.Rbrack)
+				par.Default = &phptype.Literal{Value: "[]"}
+			} else {
+				lit, ok := p.parseLitType()
+				if !ok {
+					p.errorf("expecting literal value, found %v", p.tok)
+				}
+				par.Default = lit
 			}
-			par.Default = lit
 		}
 		params = append(params, par)
 		if p.got(token.Rparen) {
