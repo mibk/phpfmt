@@ -190,7 +190,6 @@ func (p *parser) parseBlock(kind, open token.Type) (b *Block) {
 			return b
 		}
 	}
-	return b
 }
 
 func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
