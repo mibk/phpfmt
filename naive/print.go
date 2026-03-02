@@ -124,6 +124,10 @@ type printer struct {
 	maxPrec             int
 	skipSpaceAfterBlock bool
 
+	blockCtx
+}
+
+type blockCtx struct {
 	blockType token.Type
 	lastBlock token.Type
 	multiline bool
@@ -217,18 +221,14 @@ func (p *printer) print(args ...any) {
 				p.print(space)
 			}
 
-			m := p.multiline
-			t := p.blockType
-			o := p.blockOpen
+			backup := p.blockCtx
 			p.blockType = arg.kind
 			p.multiline = arg.multiline || arg.open == token.OpenTag
 			p.blockOpen = arg.open
 			for _, x := range arg.nodes {
 				p.print(x)
 			}
-			p.multiline = m
-			p.blockType = t
-			p.blockOpen = o
+			p.blockCtx = backup
 
 			// This prevents bad formatting of a switch stmt
 			// ending with an empty branch.
