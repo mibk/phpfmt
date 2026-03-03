@@ -177,7 +177,7 @@ function bar()
 
 enum RangeEnumType: string
 {
-	case from = 'from';
+	case FROM = 'from';
 	case TO   = 'to';
 }
 

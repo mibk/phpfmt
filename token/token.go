@@ -208,11 +208,12 @@ const (
 type Scanner struct {
 	php74Compat bool
 
-	r     *bufio.Reader
-	state uint
-	queue []Token
-	done  bool
-	err   error
+	r         *bufio.Reader
+	state     uint
+	queue     []Token
+	done      bool
+	err       error
+	identNext bool
 
 	line, col   int
 	lastLineLen int
@@ -234,6 +235,18 @@ func (s *Scanner) Next() (tok Token) {
 			s.state = inPHP
 		case CloseTag:
 			s.state = inHTML
+		}
+
+		if tok.Type == Whitespace || tok.Type == Comment || tok.Type == DocComment {
+			return
+		}
+		if s.identNext && tok.Type.IsKeyword() {
+			tok.Type = Ident
+		}
+		s.identNext = false
+		switch tok.Type {
+		case Arrow, QmarkArrow, DoubleColon, Function, Const, Backslash:
+			s.identNext = true
 		}
 	}()
 

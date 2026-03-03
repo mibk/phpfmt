@@ -27,9 +27,10 @@ func (e *SyntaxError) Error() string {
 type parser struct {
 	scan *token.Scanner
 
-	err error
-	tok token.Token
-	alt *token.Token // on backup
+	err       error
+	tok       token.Token
+	alt       *token.Token // on backup
+	blockKind token.Type
 }
 
 // Parse parses a single PHP file. If an error occurs while parsing
@@ -102,7 +103,10 @@ func (p *parser) parseFile() *File {
 }
 
 func (p *parser) parseBlock(kind, open token.Type) (b *Block) {
+	savedBlockKind := p.blockKind
+	p.blockKind = kind
 	defer func() {
+		p.blockKind = savedBlockKind
 		if b.open == token.Lbrace && b.kind != token.Fn && (len(b.nodes) == 0 || !isFetchOperator(b.kind)) {
 			b.multiline = true
 		}
@@ -197,8 +201,10 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 	nextBlock := token.OpenTag
 	for {
 		if p.tok.Type.IsKeyword() {
-			switch last := s.lastType(); last {
-			case token.Arrow, token.DoubleColon, token.Function, token.Const:
+			switch {
+			case p.blockKind == token.Enum && s.lastType() == token.Case:
+				p.tok.Type = token.Ident
+			case p.blockKind == token.Hash && s.lastType() == token.Illegal:
 				p.tok.Type = token.Ident
 			}
 		}

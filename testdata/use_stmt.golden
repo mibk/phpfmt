@@ -6,9 +6,9 @@ use AAAA;
 use BB;
 use DateTime;
 use Key\Query;
-use League\class;
+use League\Class;
 use Meta;
-use Meta\Http\class;
+use Meta\Http\Class;
 use ZZZ as A;
 
 class AA
