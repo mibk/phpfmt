@@ -1,0 +1,160 @@
+<?php
+
+// After ->: keywords as method/property names.
+$obj->match();
+$obj->class;
+$obj->if();
+$obj->for();
+$obj->return();
+$obj->static();
+$obj->abstract();
+$obj->final();
+$obj->readonly;
+$obj->enum;
+$obj->throw();
+$obj->yield();
+$obj->switch();
+$obj->default();
+$obj->try();
+$obj->catch();
+$obj->and;
+$obj->or;
+$obj->xor;
+
+// After ?->: nullsafe keyword identifiers.
+$obj?->match();
+$obj?->class;
+$obj?->return();
+$obj?->static;
+$obj?->default();
+$obj?->enum;
+$obj?->readonly;
+$obj?->abstract();
+$obj?->and;
+$obj?->or;
+
+// After ::
+self::match();
+self::global();
+self::for();
+self::default();
+self::class;
+self::if();
+self::return();
+self::abstract();
+static::match();
+
+// Chained keyword identifiers.
+$obj->match()->default();
+$obj->match()?->from();
+
+// After function: keywords as method names.
+class MethodNames
+{
+	function match()
+	{
+	}
+	function global()
+	{
+	}
+	function default()
+	{
+	}
+	function for()
+	{
+	}
+	function return()
+	{
+	}
+	function static()
+	{
+	}
+	function if()
+	{
+	}
+	function enum()
+	{
+	}
+	function fn()
+	{
+	}
+	function throw()
+	{
+	}
+	function readonly()
+	{
+	}
+	function and()
+	{
+	}
+	function or()
+	{
+	}
+	function xor()
+	{
+	}
+}
+
+// After const: keywords as constant names.
+class ConstNames
+{
+	const match   = 1;
+	const for     = 2;
+	const default = 3;
+	const return  = 4;
+	const class   = 6;
+	const static  = 7;
+}
+
+// After \: keywords in namespace/use paths.
+use Foo\Bar\global;
+use Foo\default;
+use Foo\for;
+use Foo\match;
+use Foo\return;
+
+// Enum case names (parser demotion).
+enum Kw: string
+{
+	case match    = 'match';
+	case for      = 'for';
+	case default  = 'default';
+	case return   = 'return';
+	case class    = 'class';
+	case global   = 'global';
+	case static   = 'static';
+	case abstract = 'abstract';
+	case if       = 'if';
+}
+
+// Attribute names (parser demotion).
+#[Private]
+function attrTest1()
+{
+}
+
+#[Static]
+function attrTest2()
+{
+}
+
+#[Abstract, Final]
+function attrTest3()
+{
+}
+
+// Named arguments (parser retroactive demotion).
+foo(match: true);
+foo(for: true, while: true, do: true);
+foo(class: true, interface: true, trait: true);
+foo(echo: true, print: true);
+foo(try: true, catch: true, throw: true);
+foo(enum: true, fn: true);
+foo(yield: true, clone: true, readonly: true);
+foo(and: true, or: true, xor: true);
+
+// LowercaseKeywords interaction: keywords in identifier
+// positions keep their original case.
+$obj->Match();
+$obj->FOR;
+self::Return();
