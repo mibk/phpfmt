@@ -237,6 +237,20 @@ func (s *Scanner) Next() (tok Token) {
 			s.state = inHTML
 		}
 
+		// PHP contexts where keywords act as identifiers:
+		//
+		//  After ->         $obj->match()        scanner (identNext)
+		//  After ?->        $obj?->match()       scanner (identNext)
+		//  After ::         self::global()       scanner (identNext)
+		//  After function   function match(){}   scanner (identNext)
+		//  After const      const match = 1      scanner (identNext)
+		//  After \          use League\Class     scanner (identNext)
+		//  Enum case name   case FROM = 'from'   parser  (blockKind)
+		//  Attribute name   #[Private]           parser  (blockKind)
+		//  Named argument   foo(return: true)    parser  (retroactive before :)
+		//
+		// Cases 7–9 require block-level context; see naive/parse.go.
+
 		if tok.Type == Whitespace || tok.Type == Comment || tok.Type == DocComment {
 			return
 		}
