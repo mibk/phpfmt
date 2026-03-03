@@ -287,6 +287,7 @@ self static switch
 throw trait Try
 use
 while enum global readonly yield from match
+true false null True
 `,
 		[]token.Token{
 			{token.OpenTag, "<?php", pos("1:1")},
@@ -390,7 +391,15 @@ while enum global readonly yield from match
 			{token.Whitespace, " ", pos("16:38")},
 			{token.Match, "match", pos("16:39")},
 			{token.Whitespace, "\n", pos("16:44")},
-			{token.EOF, "", pos("17:1")},
+			{token.ReservedConst, "true", pos("17:1")},
+			{token.Whitespace, " ", pos("17:5")},
+			{token.ReservedConst, "false", pos("17:6")},
+			{token.Whitespace, " ", pos("17:11")},
+			{token.ReservedConst, "null", pos("17:12")},
+			{token.Whitespace, " ", pos("17:16")},
+			{token.ReservedConst, "True", pos("17:17")},
+			{token.Whitespace, "\n", pos("17:21")},
+			{token.EOF, "", pos("18:1")},
 		},
 	}, {
 		"numbers",

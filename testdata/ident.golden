@@ -199,3 +199,10 @@ class From
 {
 }
 new From();
+AssertTag::NULL;
+Foo::True;
+$obj->false();
+use Foo\NULL;
+const NULL  = 'null';
+const True  = 1;
+const false = 2;

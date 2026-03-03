@@ -56,6 +56,7 @@ const (
 	DocComment
 
 	Ident
+	ReservedConst
 	Int
 	Float
 	String
@@ -196,6 +197,9 @@ func init() {
 		s := typ.String()
 		keywords[s] = Token{Type: typ}
 	}
+	for _, s := range []string{"true", "false", "null"} {
+		keywords[s] = Token{Type: ReservedConst}
+	}
 }
 
 const eof = -1
@@ -263,7 +267,7 @@ func (s *Scanner) Next() (tok Token) {
 		if tok.Type == Whitespace || tok.Type == Comment || tok.Type == DocComment {
 			return
 		}
-		if s.identNext && tok.Type.IsKeyword() {
+		if s.identNext && (tok.Type.IsKeyword() || tok.Type == ReservedConst) {
 			tok.Type = Ident
 		}
 		s.identNext = false

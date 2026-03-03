@@ -600,7 +600,7 @@ func (p *printer) print(args ...any) {
 					p.skipNextSpace = !add
 				}
 			case token.Var:
-				if last := p.lastToken(); last == token.Ident {
+				if last := p.lastToken(); last == token.Ident || last == token.ReservedConst {
 					p.removeLast(space)
 					p.print(space)
 				}
@@ -636,11 +636,8 @@ func (p *printer) print(args ...any) {
 			if p.options&LowercaseKeywords > 0 {
 				if arg.Type.IsKeyword() {
 					arg.Text = arg.Type.String()
-				} else if arg.Type == token.Ident {
-					switch strings.ToLower(arg.Text) {
-					case "true", "false", "null":
-						arg.Text = strings.ToLower(arg.Text)
-					}
+				} else if arg.Type == token.ReservedConst {
+					arg.Text = strings.ToLower(arg.Text)
 				}
 			}
 			p.tokens = append(p.tokens, arg)
