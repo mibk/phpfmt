@@ -200,7 +200,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 	s = new(Stmt)
 	nextBlock := token.OpenTag
 	for {
-		if p.tok.Type.IsKeyword() || p.tok.Type == token.ReservedConst {
+		if p.tok.Type.IsReserved() {
 			switch {
 			case p.blockKind == token.Enum && s.lastType() == token.Case:
 				p.tok.Type = token.Ident
@@ -331,7 +331,7 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 				switch tok, _ := v.(token.Token); {
 				case tok.Type == token.Whitespace:
 					continue
-				case tok.Type.IsKeyword(), tok.Type == token.ReservedConst:
+				case tok.Type.IsReserved():
 					tok.Type = token.Ident
 					s.nodes[i] = tok
 				}

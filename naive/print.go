@@ -633,10 +633,10 @@ func (p *printer) print(args ...any) {
 			}
 
 			arg.Pos = token.Pos{}
-			if p.options&LowercaseKeywords > 0 {
+			if p.options&LowercaseKeywords > 0 && arg.Type.IsReserved() {
 				if arg.Type.IsKeyword() {
 					arg.Text = arg.Type.String()
-				} else if arg.Type == token.ReservedConst {
+				} else {
 					arg.Text = strings.ToLower(arg.Text)
 				}
 			}

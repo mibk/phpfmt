@@ -46,7 +46,8 @@ func (t Token) String() string {
 
 type Type uint
 
-func (t Type) IsKeyword() bool { return keywordStart < t && t < keywordEnd }
+func (t Type) IsKeyword() bool  { return keywordStart < t && t < keywordEnd }
+func (t Type) IsReserved() bool { return t.IsKeyword() || t == ReservedConst }
 
 const (
 	Illegal Type = iota
@@ -267,7 +268,7 @@ func (s *Scanner) Next() (tok Token) {
 		if tok.Type == Whitespace || tok.Type == Comment || tok.Type == DocComment {
 			return
 		}
-		if s.identNext && (tok.Type.IsKeyword() || tok.Type == ReservedConst) {
+		if s.identNext && tok.Type.IsReserved() {
 			tok.Type = Ident
 		}
 		s.identNext = false
