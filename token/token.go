@@ -239,17 +239,26 @@ func (s *Scanner) Next() (tok Token) {
 
 		// PHP contexts where keywords act as identifiers:
 		//
-		//  After ->         $obj->match()        scanner (identNext)
-		//  After ?->        $obj?->match()       scanner (identNext)
-		//  After ::         self::global()       scanner (identNext)
-		//  After function   function match(){}   scanner (identNext)
-		//  After const      const match = 1      scanner (identNext)
-		//  After \          use League\Class     scanner (identNext)
-		//  Enum case name   case FROM = 'from'   parser  (blockKind)
-		//  Attribute name   #[Private]           parser  (blockKind)
-		//  Named argument   foo(return: true)    parser  (retroactive before :)
+		//  After ->           $obj->match()            scanner (identNext)
+		//  After ?->          $obj?->match()           scanner (identNext)
+		//  After ::           self::global()           scanner (identNext)
+		//  After function     function match(){}       scanner (identNext)
+		//  After const        const match = 1          scanner (identNext)
+		//  After \            use League\Class         scanner (identNext)
+		//  After interface    interface Match {}       scanner (identNext)
+		//  After trait        trait Return {}          scanner (identNext)
+		//  After enum         enum Global {}           scanner (identNext)
+		//  After extends      class Foo extends From   scanner (identNext)
+		//  After implements   ... implements Match     scanner (identNext)
+		//  After instanceof   $x instanceof From       scanner (identNext)
+		//  After class        class From {}            parser  (lastType)
+		//  Enum case name     case FROM = 'from'       parser  (blockKind)
+		//  Attribute name     #[Private]               parser  (blockKind)
+		//  Named argument     foo(return: true)        parser  (retroactive before :)
+		//  After new          new From()               parser  (lastType)
+		//  After , in header  implements Foo, Match    parser  (lastType+kind)
 		//
-		// Cases 7–9 require block-level context; see naive/parse.go.
+		// Cases 13–18 require block-level context; see naive/parse.go.
 
 		if tok.Type == Whitespace || tok.Type == Comment || tok.Type == DocComment {
 			return
@@ -259,7 +268,8 @@ func (s *Scanner) Next() (tok Token) {
 		}
 		s.identNext = false
 		switch tok.Type {
-		case Arrow, QmarkArrow, DoubleColon, Function, Const, Backslash:
+		case Arrow, QmarkArrow, DoubleColon, Function, Const, Backslash,
+			Interface, Trait, Enum, Extends, Implements, Instanceof:
 			s.identNext = true
 		}
 	}()

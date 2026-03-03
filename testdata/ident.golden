@@ -153,8 +153,49 @@ foo(enum: true, fn: true);
 foo(yield: true, clone: true, readonly: true);
 foo(and: true, or: true, xor: true);
 
+// After class/interface/trait/enum: keywords as type names.
+class From
+{
+}
+interface Match
+{
+}
+trait Return
+{
+}
+enum Global: string
+{
+	case A = 'a';
+}
+
+// After extends/implements: keywords as type names.
+class Foo extends From implements Match, Return
+{
+}
+interface Bar extends Match, From
+{
+}
+
+// After new: keywords as class names.
+new From();
+new Match;
+
+// After instanceof: keywords as class names.
+$x instanceof From;
+$y instanceof Match;
+
+// new class (anonymous class) must NOT demote.
+new class() {};
+
+// new static (late static binding) must NOT demote.
+new static();
+
 // LowercaseKeywords interaction: keywords in identifier
 // positions keep their original case.
 $obj->Match();
 $obj->FOR;
 self::Return();
+class From
+{
+}
+new From();

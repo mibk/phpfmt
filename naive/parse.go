@@ -206,6 +206,12 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 				p.tok.Type = token.Ident
 			case p.blockKind == token.Hash && s.lastType() == token.Illegal:
 				p.tok.Type = token.Ident
+			case s.lastType() == token.New && p.tok.Type != token.Class && p.tok.Type != token.Static:
+				p.tok.Type = token.Ident
+			case s.lastType() == token.Class && p.tok.Type != token.Extends && p.tok.Type != token.Implements:
+				p.tok.Type = token.Ident
+			case (s.kind == token.Class || s.kind == token.Interface) && s.lastType() == token.Comma:
+				p.tok.Type = token.Ident
 			}
 		}
 		switch typ := p.tok.Type; typ {
