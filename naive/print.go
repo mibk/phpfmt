@@ -39,20 +39,16 @@ const (
 func Fprint(w io.Writer, node any, options Options) error {
 	tw := tabwriter.NewWriter(w, 0, 0, 1, ' ', tabwriter.StripEscape)
 
-	// TODO: Make it concurrent safe?
+	concatPrec := opPrec[token.Concat]
 	if options&PHP74Compat > 0 {
 		options &= ^TrailingComma
 
 		// Before PHP 8.0, the concatenation operator
 		// had the same precedence as + or -.
-		prev := opPrec[token.Concat]
-		opPrec[token.Concat] = 6
-		defer func() {
-			opPrec[token.Concat] = prev
-		}()
+		concatPrec = 6
 	}
 
-	p := &printer{options: options}
+	p := &printer{options: options, concatPrec: concatPrec}
 	p.print(node)
 	if p.err != nil {
 		return p.err
@@ -113,7 +109,8 @@ func Fprint(w io.Writer, node any, options Options) error {
 type indentation int
 
 type printer struct {
-	options Options
+	options   Options
+	concatPrec int // overrides opPrec[token.Concat] for PHP 7.4 compat
 
 	tokens []any
 	err    error // sticky
@@ -344,7 +341,7 @@ func (p *printer) print(args ...any) {
 					if arg.kind == token.Class || arg.kind == token.Function || arg.kind == token.Fn {
 						p.maxPrec = len(opTable)
 					} else {
-						maxPrec = analyseOps(arg.nodes)
+						maxPrec = p.analyseOps(arg.nodes)
 						p.maxPrec = maxPrec
 					}
 				}
@@ -450,7 +447,7 @@ func (p *printer) print(args ...any) {
 						mightContinue = true
 					}
 				case *ternaryMiddle:
-					p.maxPrec = analyseOps(x.nodes)
+					p.maxPrec = p.analyseOps(x.nodes)
 					recalcPrecAfter = true
 					x.stmtAlreadyIndented = doesContinue || stmtReallyIndented
 					x.extraIndented = &extraIndented
@@ -470,7 +467,7 @@ func (p *printer) print(args ...any) {
 				}
 				if recalcPrecAfter {
 					recalcPrecAfter = false
-					maxPrec = analyseOps(arg.nodes[index:])
+					maxPrec = p.analyseOps(arg.nodes[index:])
 					p.maxPrec = maxPrec
 				}
 			}
@@ -595,7 +592,7 @@ func (p *printer) print(args ...any) {
 				case token.Ident, token.Var, token.Rbrack:
 					p.removeLast(space)
 				}
-				if add, ok := decideOpSpaces(p.maxPrec, arg.Type); ok {
+				if add, ok := p.decideOpSpaces(p.maxPrec, arg.Type); ok {
 					printSpaceAfter = add
 					p.skipNextSpace = !add
 				}
@@ -618,7 +615,7 @@ func (p *printer) print(args ...any) {
 					p.skipNextSpace = true
 				}
 			default:
-				if add, ok := decideOpSpaces(p.maxPrec, arg.Type); ok {
+				if add, ok := p.decideOpSpaces(p.maxPrec, arg.Type); ok {
 					p.removeLast(space)
 					if add {
 						p.print(space)

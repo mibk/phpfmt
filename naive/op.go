@@ -39,8 +39,17 @@ func init() {
 	}
 }
 
+// prec returns the precedence of op, using the printer’s concat override.
+func (p *printer) prec(op token.Type) (int, bool) {
+	if op == token.Concat {
+		return p.concatPrec, true
+	}
+	prec, ok := opPrec[op]
+	return prec, ok
+}
+
 // analyseOps returns the maximum precedence of binary expressions in tokens.
-func analyseOps(tokens []any) (max int) {
+func (p *printer) analyseOps(tokens []any) (max int) {
 	hasLowPrec := false
 	defer func() {
 		if hasLowPrec && max > obviousPrecLevel {
@@ -62,7 +71,7 @@ func analyseOps(tokens []any) (max int) {
 		switch tok.Type {
 		case token.And, token.Or:
 			// These are obvious enough. Exclude them from analysis,
-			// so it won't tighten up all the other operators.
+			// so it won’t tighten up all the other operators.
 			continue
 		case token.LowPrecAnd, token.LowPrecOr, token.LowPrecXor:
 			hasLowPrec = true
@@ -74,13 +83,13 @@ func analyseOps(tokens []any) (max int) {
 			tok.Type == token.Int && last == token.Concat:
 			// Ensure we keep these blanks
 			// so they aren’t converted into floats.
-			return opPrec[token.Concat]
+			return p.concatPrec
 		}
 		if tok.Type != token.Whitespace {
 			last = tok.Type
 		}
 
-		prec, ok := opPrec[tok.Type]
+		prec, ok := p.prec(tok.Type)
 		if !ok {
 			continue
 		}
@@ -91,11 +100,11 @@ func analyseOps(tokens []any) (max int) {
 	return max
 }
 
-func decideOpSpaces(max int, op token.Type) (add, ok bool) {
+func (p *printer) decideOpSpaces(max int, op token.Type) (add, ok bool) {
 	if max < 0 {
 		return false, false
 	}
-	prec, ok := opPrec[op]
+	prec, ok := p.prec(op)
 	return prec >= max, ok
 }
 
