@@ -195,13 +195,15 @@ It's	deprecated now.
 /**
 @phpstan-type   Foo  array{ 'bar' :string }  For sure
 @phpstan-type  Bar =  int|string
+@param  array { }   $empty
 @param  Foo     []   $foos
 */
 ----
 /**
- * @phpstan-type Foo   array{'bar': string} For sure
- * @phpstan-type Bar   int|string
- * @param        Foo[] $foos
+ * @phpstan-type Foo     array{'bar': string} For sure
+ * @phpstan-type Bar     int|string
+ * @param        array{} $empty
+ * @param        Foo[]   $foos
  */
 `},
 	{"string lit", `

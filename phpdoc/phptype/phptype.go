@@ -43,7 +43,7 @@ type Nullable struct {
 // in the ordered-map mode.
 type ArrayShape struct {
 	typ
-	Elems []*ArrayElem
+	Elems []*ArrayElem // nil = bare array; non-nil empty = array{}
 }
 
 // An ArrayElem represents a key-value element of ArrayShape.

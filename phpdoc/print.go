@@ -223,6 +223,9 @@ func (p *printer) printPHPType(typ phptype.Type) {
 	case *phptype.ArrayShape:
 		p.print(token.Array)
 		if len(typ.Elems) == 0 {
+			if typ.Elems != nil {
+				p.print(token.Lbrace, token.Rbrace)
+			}
 			break
 		}
 		p.print(token.Lbrace)

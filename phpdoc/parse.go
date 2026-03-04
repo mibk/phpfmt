@@ -584,6 +584,7 @@ func (p *parser) parseParam(needVar bool) *phptype.Param {
 func (p *parser) parseArrayShapeType() phptype.Type {
 	typ := new(phptype.ArrayShape)
 	if p.got(token.Lbrace) {
+		typ.Elems = []*phptype.ArrayElem{}
 	Elems:
 		for {
 			elem := new(phptype.ArrayElem)
@@ -597,10 +598,7 @@ func (p *parser) parseArrayShapeType() phptype.Type {
 					p.backup()
 				}
 			case token.Rbrace:
-				// Allow trailing comma.
-				if len(typ.Elems) > 0 {
-					break Elems
-				}
+				break Elems
 			}
 			had := p.tok
 			elem.Type = p.parseType()
