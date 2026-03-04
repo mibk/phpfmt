@@ -88,15 +88,16 @@ func TestParsingDoc(t *testing.T) {
 
 func TestParsingTypes(t *testing.T) {
 	type (
-		union      = phptype.Union
-		intersect  = phptype.Intersect
-		array      = phptype.Array
-		parens     = phptype.Paren
-		nullable   = phptype.Nullable
-		arrayShape = phptype.ArrayShape
-		arrayElem  = phptype.ArrayElem
-		generic    = phptype.Generic
-		named      = phptype.Named
+		union       = phptype.Union
+		intersect   = phptype.Intersect
+		array       = phptype.Array
+		parens      = phptype.Paren
+		nullable    = phptype.Nullable
+		arrayShape  = phptype.ArrayShape
+		arrayElem   = phptype.ArrayElem
+		generic     = phptype.Generic
+		named       = phptype.Named
+		conditional = phptype.Conditional
 	)
 
 	types := func(types ...phptype.Type) []phptype.Type { return types }
@@ -178,6 +179,36 @@ func TestParsingTypes(t *testing.T) {
 			typ:  `self`,
 			want: &phptype.Named{Parts: []string{"self"}},
 		},
+		{
+			typ: `($size is positive-int ? non-empty-array : array)`,
+			want: &conditional{
+				Subject: "size", IsVar: true,
+				Cond:  &named{Parts: parts("positive-int")},
+				True:  &named{Parts: parts("non-empty-array")},
+				False: new(arrayShape),
+			},
+		},
+		{
+			typ: `(T is int ? static : array<static>)`,
+			want: &conditional{
+				Subject: "T",
+				Cond:    &named{Parts: parts("int")},
+				True:    &named{Parts: parts("static")},
+				False: &generic{
+					Base:       new(arrayShape),
+					TypeParams: types(&named{Parts: parts("static")}),
+				},
+			},
+		},
+		{
+			typ: `(T is not null ? non-empty-string : string)`,
+			want: &conditional{
+				Subject: "T", Negated: true,
+				Cond:  &named{Parts: parts("null")},
+				True:  &named{Parts: parts("non-empty-string")},
+				False: &named{Parts: parts("string")},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -253,6 +284,10 @@ func TestSyntaxErrors(t *testing.T) {
 		{
 			`/**@var DateTime::ANY_ * */`,
 			`line:1:26: invalid position of *, did you mean to write ANY_*?`,
+		},
+		{
+			`/**@return ($size int ? string : array)*/`,
+			`line:1:19: expecting "is", found Ident("int")`,
 		},
 	}
 

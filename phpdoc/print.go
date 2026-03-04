@@ -279,6 +279,17 @@ func (p *printer) printPHPType(typ phptype.Type) {
 		}
 	case *phptype.This:
 		p.print(token.This)
+	case *phptype.Conditional:
+		p.print(token.Lparen)
+		if typ.IsVar {
+			p.print('$')
+		}
+		p.print(typ.Subject, " is ")
+		if typ.Negated {
+			p.print("not ")
+		}
+		p.print(typ.Cond, ' ', token.Qmark, ' ', typ.True, ' ', token.Colon, ' ', typ.False)
+		p.print(token.Rparen)
 	default:
 		panic(fmt.Sprintf("unknown PHP type %T", typ))
 	}

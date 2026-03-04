@@ -109,3 +109,15 @@ type Callable struct {
 	Params []*Param
 	Result Type
 }
+
+// Conditional represents a PHPStan/Psalm conditional return type,
+// e.g. (T is int ? string : array) or ($x is not null ? non-empty-string : string).
+type Conditional struct {
+	typ
+	Subject string // variable name (without $) or type parameter name
+	IsVar   bool   // true for $var subjects
+	Negated bool   // true for "is not"
+	Cond    Type
+	True    Type
+	False   Type
+}

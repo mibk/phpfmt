@@ -449,12 +449,53 @@ func (p *parser) tryParseAtomicType() (_ phptype.Type, ok bool) {
 	return typ, true
 }
 
-// ParenType = "(" PHPType ")" .
+// ParenType       = "(" PHPType ")" | ConditionalType .
+// ConditionalType = "(" ( Var | Ident ) "is" [ "not" ] PHPType "?" PHPType ":" PHPType ")" .
 func (p *parser) parseParenType() phptype.Type {
-	typ := new(phptype.Paren)
-	typ.Type = p.parseType()
+	if p.tok.Type == token.Var {
+		subject := strings.TrimPrefix(p.tok.Text, "$")
+		p.next()
+		if p.tok.Type != token.Ident || p.tok.Text != "is" {
+			p.errorf(`expecting "is", found %v`, p.tok)
+			return nil
+		}
+		return p.parseConditionalType(subject, true)
+	}
+
+	inner := p.parseType()
+
+	// Check if a simple Named identifier is followed by "is" → conditional.
+	if id, ok := inner.(*phptype.Named); ok && !id.Global && len(id.Parts) == 1 {
+		if p.tok.Type == token.Ident && p.tok.Text == "is" {
+			return p.parseConditionalType(id.Parts[0], false)
+		}
+	}
+
 	p.expect(token.Rparen)
-	return typ
+	return &phptype.Paren{Type: inner}
+}
+
+func (p *parser) parseConditionalType(subject string, isVar bool) *phptype.Conditional {
+	p.next() // consume "is"
+	negated := false
+	if p.tok.Type == token.Ident && p.tok.Text == "not" {
+		negated = true
+		p.next()
+	}
+	cond := p.parseType()
+	p.expect(token.Qmark)
+	trueType := p.parseType()
+	p.expect(token.Colon)
+	falseType := p.parseType()
+	p.expect(token.Rparen)
+	return &phptype.Conditional{
+		Subject: subject,
+		IsVar:   isVar,
+		Negated: negated,
+		Cond:    cond,
+		True:    trueType,
+		False:   falseType,
+	}
 }
 
 // CallableType  = callable [ FuncSignature ] .

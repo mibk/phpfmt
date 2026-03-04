@@ -262,6 +262,19 @@ It's	deprecated now.
 ----
 /** @var ?InvoicePayment::CATEGORY_* */
 `},
+	{"conditional types", `
+/**
+@return  ( $size  is   positive-int  ?  non-empty-array  :  array )
+@return  ( T   is  int ?  static   :  array < static >  )
+@return (T  is  not   null  ?  non-empty-string  : string)
+*/
+----
+/**
+ * @return ($size is positive-int ? non-empty-array : array)
+ * @return (T is int ? static : array<static>)
+ * @return (T is not null ? non-empty-string : string)
+ */
+`},
 }
 
 func TestPrinting(t *testing.T) {
