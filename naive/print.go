@@ -579,8 +579,8 @@ func (p *printer) print(args ...any) {
 			case token.Semicolon, token.Comma:
 				p.removeLast(space)
 			case token.Backslash:
-				if ws := p.removeLast(space); ws != nil && p.lastToken() != token.Ident {
-					p.print(ws)
+				if p.lastToken() == token.Ident {
+					p.removeLast(space)
 				}
 				p.skipNextSpace = true
 			case token.Arrow, token.QmarkArrow, token.DoubleColon:
