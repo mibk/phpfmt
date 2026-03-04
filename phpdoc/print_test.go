@@ -194,11 +194,13 @@ It's	deprecated now.
 	{"types", `
 /**
 @phpstan-type   Foo  array{ 'bar' :string }  For sure
+@phpstan-type  Bar =  int|string
 @param  Foo     []   $foos
 */
 ----
 /**
  * @phpstan-type Foo   array{'bar': string} For sure
+ * @phpstan-type Bar   int|string
  * @param        Foo[] $foos
  */
 `},

@@ -312,11 +312,12 @@ func (p *parser) parseTemplateTag() *TemplateTag {
 	return tag
 }
 
-// TypeDefTag = "@phpstan-type" ident PHPType [ Desc ] .
+// TypeDefTag = "@phpstan-type" ident [ "=" ] PHPType [ Desc ] .
 func (p *parser) parseTypeDefTag() *TypeDefTag {
 	tag := new(TypeDefTag)
 	tag.Name = p.tok.Text
 	p.expect(token.Ident)
+	p.got(token.Assign)
 	tag.Type = p.parseType()
 	tag.Desc = p.parseDesc(nil)
 	return tag
