@@ -240,35 +240,25 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 			s.nodes = append(s.nodes, p.tok)
 			p.next()
 		case token.Extends, token.Implements:
-			for _, v := range slices.Backward(s.nodes) {
-				switch tok, _ := v.(token.Token); tok.Type {
-				case token.Whitespace:
-					continue
-				case token.Class:
-					// Let's use something that always places { on the same line.
-					nextBlock = token.Fn
-				}
-				break
+			if tok, _ := lastNonWS(s.nodes); tok.Type == token.Class {
+				// Let's use something that always places { on the same line.
+				nextBlock = token.Fn
 			}
 			s.nodes = append(s.nodes, p.tok)
 			p.next()
 		case token.Lparen:
 			block := nextBlock
-			for _, v := range slices.Backward(s.nodes) {
-				switch tok, _ := v.(token.Token); tok.Type {
-				case token.Whitespace:
-					continue
-				case token.Echo, token.Print, token.Static:
-					block = token.Ident
-				case token.Ident, token.Var:
-					if nextBlock != token.Function {
-						block = tok.Type
-					}
-				case token.Class, token.Function:
-					// Let's use something that always places { on the same line.
-					nextBlock = token.Fn
+			prev, _ := lastNonWS(s.nodes)
+			switch prev.Type {
+			case token.Echo, token.Print, token.Static:
+				block = token.Ident
+			case token.Ident, token.Var:
+				if nextBlock != token.Function {
+					block = prev.Type
 				}
-				break
+			case token.Class, token.Function:
+				// Let's use something that always places { on the same line.
+				nextBlock = token.Fn
 			}
 			p.next()
 			sub := p.parseBlock(block, typ)
@@ -327,15 +317,9 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 			// is a regular named parameter.
 			// Note that this also switches off the default case,
 			// but that's OK; it is a kind of a label anyway.
-			for i, v := range slices.Backward(s.nodes) {
-				switch tok, _ := v.(token.Token); {
-				case tok.Type == token.Whitespace:
-					continue
-				case tok.Type.IsReserved():
-					tok.Type = token.Ident
-					s.nodes[i] = tok
-				}
-				break
+			if tok, i := lastNonWS(s.nodes); tok.Type.IsReserved() {
+				tok.Type = token.Ident
+				s.nodes[i] = tok
 			}
 			s.nodes = append(s.nodes, p.tok)
 			p.next()
@@ -374,4 +358,17 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 			p.next()
 		}
 	}
+}
+
+// lastNonWS returns the last non-whitespace token in nodes
+// and its index. If no such token exists, it returns a zero
+// token and -1.
+func lastNonWS(nodes []any) (token.Token, int) {
+	for i, v := range slices.Backward(nodes) {
+		tok, ok := v.(token.Token)
+		if !ok || tok.Type != token.Whitespace {
+			return tok, i
+		}
+	}
+	return token.Token{}, -1
 }
