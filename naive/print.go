@@ -242,8 +242,7 @@ func (p *printer) print(args ...any) {
 			}
 
 			if arg.oneliner() {
-				p.removeLast(space)
-				p.print(space)
+				p.ensureSpace()
 			} else if arg.multiline || arg.offsetEndParen {
 				if p.options&TrailingComma > 0 && arg.fixComma && len(arg.nodes) > 0 {
 					p.removeLast(space)
@@ -520,8 +519,7 @@ func (p *printer) print(args ...any) {
 				if !isLineComment(arg) {
 					// TODO: Or ensure spaces around always?
 					if last := p.lastToken(); last != token.Lparen && last != token.Lbrack {
-						p.removeLast(space)
-						p.print(space)
+						p.ensureSpace()
 					}
 					printSpaceAfter = true
 					break
@@ -596,8 +594,7 @@ func (p *printer) print(args ...any) {
 				}
 			case token.Var:
 				if last := p.lastToken(); last == token.Ident || last == token.ReservedConst {
-					p.removeLast(space)
-					p.print(space)
+					p.ensureSpace()
 				}
 				fallthrough
 			case token.Ident:
@@ -618,8 +615,7 @@ func (p *printer) print(args ...any) {
 						p.skipNextSpace = true
 					}
 				} else if spacesAround(arg.Type) {
-					p.removeLast(space)
-					p.print(space)
+					p.ensureSpace()
 				}
 			}
 
@@ -694,6 +690,11 @@ func (p *printer) justIndented() bool {
 		return ok
 	}
 	return false
+}
+
+func (p *printer) ensureSpace() {
+	p.removeLast(space)
+	p.print(space)
 }
 
 func (p *printer) removeTrailingWS() (fixed bool) {
