@@ -586,10 +586,8 @@ func (p *printer) print(args ...any) {
 			case token.Qmark, token.BitNot, token.At, token.Not, token.Dollar, token.Ellipsis:
 				p.skipNextSpace = true
 			case metaTokenCast:
-				switch last := p.lastToken(); last {
-				// TODO: The ] feels like a hack,
-				// and it's duplicated for ++ -- below.
-				case token.Ident, token.Var, token.Rbrack:
+				// TODO: The ] in isPostfixTarget feels like a hack.
+				if isPostfixTarget(p.lastToken()) {
 					p.removeLast(space)
 				}
 				if add, ok := p.decideOpSpaces(p.maxPrec, arg.Type); ok {
@@ -605,13 +603,9 @@ func (p *printer) print(args ...any) {
 			case token.Ident:
 				p.skipSpaceBeforeParen = true
 			case token.Inc, token.Dec:
-				switch last := p.lastToken(); last {
-				// TODO: The ] feels like a hack.
-				// Once formatting operators is done,
-				// remove it.
-				case token.Ident, token.Var, token.Rbrack:
+				if isPostfixTarget(p.lastToken()) {
 					p.removeLast(space)
-				default:
+				} else {
 					p.skipNextSpace = true
 				}
 			default:
@@ -740,6 +734,10 @@ func (p *printer) removeLast(tok any) any {
 
 func isLineComment(tok token.Token) bool {
 	return tok.Type == token.Comment && !strings.HasPrefix(tok.Text, "/*")
+}
+
+func isPostfixTarget(typ token.Type) bool {
+	return typ == token.Ident || typ == token.Var || typ == token.Rbrack
 }
 
 func spacesAround(typ token.Type) bool {
