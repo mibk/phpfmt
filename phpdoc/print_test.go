@@ -181,6 +181,7 @@ It's	deprecated now.
 @param   self :: ALL_*$a
 @param  self::ANY_*  []           $xx
 @param value-of < That   :: ConstVal >$b
+@param  JsonFile  ::   *_SCHEMA $schema
 @return BAR  ::    *
 */
 ----
@@ -188,6 +189,7 @@ It's	deprecated now.
  * @param  self::ALL_*              $a
  * @param  self::ANY_*[]            $xx
  * @param  value-of<That::ConstVal> $b
+ * @param  JsonFile::*_SCHEMA       $schema
  * @return BAR::*
  */
 `},

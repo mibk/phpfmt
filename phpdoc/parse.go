@@ -434,6 +434,10 @@ func (p *parser) tryParseAtomicType() (_ phptype.Type, ok bool) {
 				p.errorf("unexpected %v, expecting %v", p.tok, token.Ident)
 			}
 			p.next0()
+			if cf.Name == "*" && p.tok.Type == token.Ident {
+				cf.Name += p.tok.Text
+				p.next0()
+			}
 			if cf.Name != "*" && p.got(token.Asterisk) {
 				cf.Name += "*"
 			}
