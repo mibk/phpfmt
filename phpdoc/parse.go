@@ -406,12 +406,23 @@ func (p *parser) tryParseAtomicType() (_ phptype.Type, ok bool) {
 			typ = p.parseArrayShapeType()
 		} else if p.got(token.Object) {
 			typ = p.parseObjectShapeType()
-		} else if p.got(token.Callable) {
-			typ = p.parseCallableType()
-		} else if typ, ok = p.parseNamedType(); !ok {
+		} else if p.tok.Type == token.Callable {
+			name := p.tok.Text
+			p.next()
+			typ = p.parseCallableType(name)
+		} else if named, nameOk := p.parseNamedType(); !nameOk {
 			if typ, ok = p.parseLitType(); !ok {
 				return nil, false
 			}
+		} else if p.isClosureName(named) && p.tok.Type == token.Lparen {
+			name := "Closure"
+			if named.Global {
+				name = `\Closure`
+			}
+			typ = p.parseCallableType(name)
+		} else {
+			typ = named
+			ok = true
 		}
 		if ok && p.got(token.DoubleColon) {
 			cf := &phptype.ConstFetch{Class: typ, Name: p.tok.Text}
@@ -498,10 +509,14 @@ func (p *parser) parseConditionalType(subject string, isVar bool) *phptype.Condi
 	}
 }
 
+func (p *parser) isClosureName(n *phptype.Named) bool {
+	return len(n.Parts) == 1 && n.Parts[0] == "Closure"
+}
+
 // CallableType  = callable [ FuncSignature ] .
 // FuncSignature = "(" [ ParamList [ "," ] ] ")" [ ":" PHPType ] .
-func (p *parser) parseCallableType() phptype.Type {
-	typ := new(phptype.Callable)
+func (p *parser) parseCallableType(name string) phptype.Type {
+	typ := &phptype.Callable{Name: name}
 	if !p.got(token.Lparen) {
 		return typ
 	}

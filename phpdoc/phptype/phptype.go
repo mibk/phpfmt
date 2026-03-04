@@ -106,6 +106,7 @@ type Param struct {
 
 type Callable struct {
 	typ
+	Name   string // "callable", "Closure", or "\Closure"
 	Params []*Param
 	Result Type
 }

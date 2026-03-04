@@ -262,6 +262,19 @@ It's	deprecated now.
 ----
 /** @var ?InvoicePayment::CATEGORY_* */
 `},
+	{"closure callable", `
+/**
+@param Closure(string $file): void|null $callback
+@param \ Closure (string ) :  int $fn
+@param Closure $cb
+*/
+----
+/**
+ * @param Closure(string $file): void|null $callback
+ * @param \Closure(string): int            $fn
+ * @param Closure                          $cb
+ */
+`},
 	{"conditional types", `
 /**
 @return  ( $size  is   positive-int  ?  non-empty-array  :  array )

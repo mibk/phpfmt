@@ -213,7 +213,7 @@ func (p *printer) printPHPType(typ phptype.Type) {
 	case *phptype.Nullable:
 		p.print(token.Qmark, typ.Type)
 	case *phptype.Callable:
-		p.print(token.Callable)
+		p.print(typ.Name)
 		if len(typ.Params) > 0 || typ.Result != nil {
 			p.print(typ.Params)
 			if typ.Result != nil {
