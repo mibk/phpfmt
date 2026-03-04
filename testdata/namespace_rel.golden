@@ -1,0 +1,8 @@
+<?php
+
+$x = namespace\Foo::BAR;
+foo(namespace\Bar::class);
+return namespace\Baz::create();
+$y = namespace\Qux::$prop;
+echo namespace\SOME_CONST;
+$z = new namespace\MyClass();

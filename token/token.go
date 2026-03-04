@@ -256,6 +256,7 @@ func (s *Scanner) Next() (tok Token) {
 		//  After extends      class Foo extends From   scanner (identNext)
 		//  After implements   ... implements Match     scanner (identNext)
 		//  After instanceof   $x instanceof From       scanner (identNext)
+		//  Before \           namespace\Foo            scanner (peek)
 		//  After class        class From {}            parser  (lastType)
 		//  Enum case name     case FROM = 'from'       parser  (blockKind)
 		//  Attribute name     #[Private]               parser  (blockKind)
@@ -263,7 +264,7 @@ func (s *Scanner) Next() (tok Token) {
 		//  After new          new From()               parser  (lastType)
 		//  After , in header  implements Foo, Match    parser  (lastType+kind)
 		//
-		// Cases 13–18 require block-level context; see naive/parse.go.
+		// Cases 14–19 require block-level context; see naive/parse.go.
 
 		if tok.Type == Whitespace || tok.Type == Comment || tok.Type == DocComment {
 			return
@@ -567,6 +568,9 @@ func (s *Scanner) scanAny() (tok Token) {
 		if id := s.scanIdent(); id != "" {
 			k := strings.ToLower(id)
 			if tok, ok := keywords[k]; ok {
+				if tok.Type == Namespace && s.peek() == '\\' {
+					return Token{Type: Ident, Text: id}
+				}
 				tok.Text = id
 				return tok
 			}
