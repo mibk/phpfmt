@@ -153,496 +153,15 @@ func (p *printer) print(args ...any) {
 		default:
 			p.err = fmt.Errorf("unsupported type %T", arg)
 		case *File:
-			if d := arg.htmlPreamble; d != nil {
-				d.Text = strings.TrimLeft(d.Text, " \t\n")
-				p.print(*d)
-			}
-			p.print(arg.block)
-			fixed := p.removeTrailingWS()
-			if d := p.removeLast(token.InlineHTML); d != nil {
-				d := d.(token.Token)
-				d.Text = strings.TrimRight(d.Text, " \t\n")
-				p.print(d)
-			}
-			if !fixed {
-				p.print(newline)
-			}
+			p.printFile(arg)
 		case *Block:
-			p.lastBlock = arg.kind
-			switch arg.open {
-			case token.Lparen:
-				switch last := p.lastToken(); last {
-				case token.Rparen, token.Rbrack,
-					token.Declare, token.Class, token.Function, token.Fn:
-					p.removeTrailingWS()
-				}
-			case token.Lbrack:
-				switch last := p.lastToken(); last {
-				case token.Rparen, token.Rbrack:
-					p.removeLast(space)
-				}
-			case token.Lbrace:
-				if arg.kind == token.Lbrace {
-					// For implicit blocks, do nothing.
-					break
-				}
-				nl := p.removeTrailingWS()
-				switch arg.kind {
-				case token.Arrow, token.DoubleColon:
-				case token.OpenTag, token.Class, token.Interface, token.Trait, token.Enum,
-					token.Function:
-					if !nl {
-						p.print(newline, p.indent)
-					}
-					p.alignNextAssign = false
-				default:
-					p.print(space)
-				}
-			}
-			if arg.open != token.Lbrace && p.skipSpaceBeforeParen {
-				p.removeLast(space)
-			}
-			p.print(arg.open)
-			if arg.commentTag != nil {
-				p.print(space, *arg.commentTag)
-			}
-			if arg.open == token.OpenTag {
-				if arg.multiline {
-					p.print(newline)
-				} else {
-					p.print(nextcol)
-				}
-			}
-			if arg.indented {
-				p.indent++
-			}
-			if arg.multiline && len(arg.nodes) > 0 {
-				p.print(newline, p.indent)
-			} else if arg.oneliner() {
-				p.print(space)
-			}
-
-			backup := p.blockCtx
-			p.blockType = arg.kind
-			p.multiline = arg.multiline || arg.open == token.OpenTag
-			p.blockOpen = arg.open
-			for _, x := range arg.nodes {
-				p.print(x)
-			}
-			p.blockCtx = backup
-
-			// This prevents bad formatting of a switch stmt
-			// ending with an empty branch.
-			p.removeLast(p.indent)
-			p.removeLast(newline)
-			p.skipNextSpace = false
-
-			if arg.indented {
-				p.indent--
-			}
-
-			if arg.oneliner() {
-				p.ensureSpace()
-			} else if arg.multiline || arg.offsetEndParen {
-				if p.options&TrailingComma > 0 && arg.fixComma && len(arg.nodes) > 0 {
-					p.removeLast(space)
-					c := p.removeLast(token.Comment)
-					p.removeLast(space)
-					p.removeLast(nextcol)
-					p.removeLast(token.Comma)
-					if p.lastIsToken() {
-						p.print(token.Comma)
-					}
-					if c != nil {
-						p.print(c)
-					}
-				}
-				p.print(newline, p.indent)
-			} else {
-				p.removeLast(space)
-				p.removeLast(token.Comma)
-			}
-			if arg.kind == token.For && arg.close == token.Rparen {
-				s1 := p.removeLast(token.Semicolon)
-				s2 := p.removeLast(token.Semicolon)
-				if s2 != nil {
-					p.removeLast(space)
-					paren := p.removeLast(token.Lparen)
-					if paren != nil {
-						// This is a special case for infinite loops.
-						// Let's follow the K&R-derived style.
-						p.print(token.Token{Type: token.Lparen, Text: "(;;"})
-						s1 = nil
-					} else {
-						p.print(s2, space)
-					}
-				}
-				if s1 != nil {
-					p.print(s1)
-				}
-			}
-			p.print(arg.close)
-			if arg.close == token.Rbrace && !isFetchOperator(arg.kind) ||
-				arg.close == token.Rparen && arg.kind != token.OpenTag ||
-				arg.kind == token.Hash {
-				p.print(space)
-			}
-			p.skipSpaceBeforeParen = false
+			p.printBlock(arg)
 		case *ternaryMiddle:
-			p.removeLast(space)
-			p.print(space, token.Qmark, space)
-			p.skipSpaceBeforeParen = false
-			hasAny := false
-			indented := false
-			for _, x := range arg.nodes {
-				tok, ok := x.(token.Token)
-				if !ok || tok.Type != token.Whitespace {
-					hasAny = true
-				} else if !indented && tok.Type == token.Whitespace &&
-					strings.Contains(tok.Text, "\n") {
-					indented = true
-					p.indent++
-					*arg.extraIndented++
-					*arg.doesContinue = true
-				}
-				p.print(x)
-			}
-			if arg.stmtAlreadyIndented {
-				if p.removeLast(p.indent) != nil {
-					p.print(p.indent - 1)
-				}
-			}
-			p.removeLast(space)
-			if hasAny {
-				p.print(space)
-			}
-			p.print(token.Colon, space)
-			p.skipSpaceBeforeParen = false
+			p.printTernary(arg)
 		case *Stmt:
-			var extraIndented indentation
-			fatArrow := false
-			stmtReallyIndented := false
-			mightContinue := false
-			doesContinue := false
-			if arg.isLabel {
-				if p.removeLast(p.indent) != nil {
-					p.print(p.indent - 1)
-				}
-				p.indent--
-				extraIndented--
-			}
-			maxPrec := -1
-			p.maxPrec = maxPrec
-			recalcPrecAfter := false
-			hadSpecialParamChar := false
-			for index, x := range arg.nodes {
-				if maxPrec == -1 {
-					if arg.kind == token.Class || arg.kind == token.Function || arg.kind == token.Fn {
-						p.maxPrec = len(opTable)
-					} else {
-						maxPrec = p.analyseOps(arg.nodes)
-						p.maxPrec = maxPrec
-					}
-				}
-				addSpace := false
-				switch x := x.(type) {
-				case token.Token:
-					if p.skipSpaceAfterBlock {
-						p.skipSpaceAfterBlock = false
-						p.skipNextSpace = true
-					}
-					switch rest := arg.nodes[index+1:]; x.Type {
-					case token.DoubleArrow, token.Assign:
-						// With these, change the stmt kind to change
-						// handling operator spacing.
-						// TODO: Find a better solution?
-						maxPrec = -1
-						arg.kind = x.Type
-					case token.Colon:
-						p.removeLast(space)
-					case token.Not:
-						// A hack to add a space after the ! unary op,
-						// to emphasize that instanceof has a higher precedence.
-						if nextOperatorIs(rest, token.Instanceof) {
-							addSpace = true
-						}
-					case token.At:
-						// And this solves the infamous:
-						//	- 2**2
-						// and perhaps some others?
-						// The @ token represents all unary operators.
-						// See (*parser).parseStmt.
-						if nextOperatorIs(rest, token.Pow) {
-							addSpace = true
-							p.maxPrec = max(p.maxPrec, 2)
-						}
-					case token.BitAnd, token.Ellipsis:
-						hadSpecialParamChar = true
-					case token.Var:
-						if hadSpecialParamChar && arg.kind == token.Function {
-							p.removeLast(space)
-							ell := p.removeLast(token.Ellipsis)
-							p.removeLast(space)
-							amp := p.removeLast(token.BitAnd)
-							p.removeLast(space)
-							if p.lastToken() != token.Lparen {
-								p.print(space)
-							}
-							if amp != nil {
-								// Disguise the token so no blank is added after it.
-								amp := amp.(token.Token)
-								amp.Type = token.At
-								p.print(amp)
-							}
-							if ell != nil {
-								p.print(ell)
-							}
-						}
-					}
-
-					if !p.multiline {
-						if x.Type == token.Whitespace && strings.Contains(x.Text, "\n") {
-							stmtReallyIndented = true
-						}
-						p.print(x)
-						if addSpace {
-							p.print(space)
-						}
-						continue
-					}
-					switch x.Type {
-					case token.Comment:
-						if !arg.isLabel || !isLineComment(x) {
-							break
-						}
-						if p.srcIndent > p.indent {
-							p.removeLast(p.indent)
-							p.print(p.indent + 1)
-						}
-					case token.DocComment:
-					case token.Whitespace:
-						if !strings.Contains(x.Text, "\n") {
-							break
-						}
-						if fatArrow {
-							p.indent++
-							extraIndented++
-						} else if !doesContinue && mightContinue {
-							p.indent++
-							extraIndented++
-							doesContinue = true
-						}
-					case token.Colon:
-						mightContinue = false
-						if doesContinue {
-							p.indent--
-							extraIndented--
-							doesContinue = false
-						}
-					case token.DoubleArrow:
-						fatArrow = true
-					default:
-						fatArrow = false
-						mightContinue = true
-					}
-				case *ternaryMiddle:
-					p.maxPrec = p.analyseOps(x.nodes)
-					recalcPrecAfter = true
-					x.stmtAlreadyIndented = doesContinue || stmtReallyIndented
-					x.extraIndented = &extraIndented
-					x.doesContinue = &doesContinue
-				case *Block:
-					maxPrec = -1
-					if doesContinue && x.multiline && x.open == token.Lbrace {
-						p.indent--
-						extraIndented--
-						doesContinue = false
-						mightContinue = false
-					}
-				}
-				p.print(x)
-				if addSpace {
-					p.print(space)
-				}
-				if recalcPrecAfter {
-					recalcPrecAfter = false
-					maxPrec = p.analyseOps(arg.nodes[index:])
-					p.maxPrec = maxPrec
-				}
-			}
-			p.indent -= extraIndented
-			if arg.isLabel {
-				p.print(newline, p.indent)
-				p.skipNextSpace = true
-			}
-			p.alignNextAssign = false
-			switch arg.kind {
-			case token.Namespace, token.Declare:
-				p.print(newline, newline, p.indent)
-				p.skipNextSpace = true
-			}
+			p.printStmt(arg)
 		case token.Token:
-			if arg.Type == token.Whitespace {
-				if i := strings.LastIndexByte(arg.Text, '\n'); i >= 0 {
-					p.srcIndent = 0
-					for _, r := range arg.Text[i+1:] {
-						if r != '\t' {
-							break
-						}
-						p.srcIndent++
-					}
-					if p.skipNextSpace {
-						continue
-					}
-					if strings.Contains(arg.Text[:i], "\n") && p.lastBlock != token.Hash {
-						p.print(newline)
-					}
-					p.print(newline, p.indent)
-				} else if !p.skipNextSpace {
-					p.removeLast(space)
-					// Do not print space after Foo::{$expr}
-					if p.lastToken() != token.Rbrace {
-						p.print(space)
-					}
-				}
-				continue
-			}
-			p.skipNextSpace = false
-			p.skipSpaceBeforeParen = false
-			printSpaceAfter := false
-			switch arg.Type {
-			case token.Illegal:
-				log.Printf("WARN: unknown token: %q", arg.Text)
-			case token.OpenTag:
-				printSpaceAfter = true
-			case token.Comment:
-				if !isLineComment(arg) {
-					// TODO: Or ensure spaces around always?
-					if last := p.lastToken(); last != token.Lparen && last != token.Lbrack {
-						p.ensureSpace()
-					}
-					printSpaceAfter = true
-					break
-				}
-				if s := strings.TrimSpace(arg.Text); s == "//" &&
-					p.lastToken() != token.Comment {
-					// Ignore this one.
-					continue
-				}
-				p.removeLast(space)
-				if !p.justIndented() {
-					p.print(nextcol)
-				}
-			case token.If:
-				if p.lastToken() == token.Else {
-					p.removeTrailingWS()
-				}
-			case token.Else, token.Catch, token.Finally:
-				if p.lastToken() == token.Rbrace {
-					p.removeTrailingWS()
-					p.print(space)
-				}
-			case token.Use:
-				p.removeLast(space)
-				if r := p.removeLast(token.Rparen); r != nil {
-					p.print(r, space)
-				}
-			case token.Const, token.Case:
-				p.alignNextAssign = true
-			case token.Static:
-				p.skipSpaceBeforeParen = true
-				fallthrough
-			case token.Private, token.Protected, token.Public,
-				token.Readonly, token.Final:
-				if p.blockOpen == token.Lbrace {
-					p.alignNextAssign = true
-				}
-			case token.Assign:
-				p.removeLast(space)
-				if p.alignNextAssign {
-					p.print(nextcol)
-				} else if p.blockType != token.Declare {
-					p.print(space)
-				}
-			case token.DoubleArrow:
-				p.removeLast(space)
-				if p.multiline {
-					p.print(nextcol)
-				} else {
-					p.print(space)
-				}
-			case token.Semicolon, token.Comma:
-				p.removeLast(space)
-			case token.Backslash:
-				if p.lastToken() == token.Ident {
-					p.removeLast(space)
-				}
-				p.skipNextSpace = true
-			case token.Arrow, token.QmarkArrow, token.DoubleColon:
-				p.removeLast(space)
-				fallthrough
-			case token.Qmark, token.BitNot, token.At, token.Not, token.Dollar, token.Ellipsis:
-				p.skipNextSpace = true
-			case metaTokenCast:
-				// TODO: The ] in isPostfixTarget feels like a hack.
-				if isPostfixTarget(p.lastToken()) {
-					p.removeLast(space)
-				}
-				if add, ok := p.decideOpSpaces(p.maxPrec, arg.Type); ok {
-					printSpaceAfter = add
-					p.skipNextSpace = !add
-				}
-			case token.Var:
-				if last := p.lastToken(); last == token.Ident || last == token.ReservedConst {
-					p.ensureSpace()
-				}
-				fallthrough
-			case token.Ident:
-				p.skipSpaceBeforeParen = true
-			case token.Inc, token.Dec:
-				if isPostfixTarget(p.lastToken()) {
-					p.removeLast(space)
-				} else {
-					p.skipNextSpace = true
-				}
-			default:
-				if add, ok := p.decideOpSpaces(p.maxPrec, arg.Type); ok {
-					p.removeLast(space)
-					if add {
-						p.print(space)
-						printSpaceAfter = true
-					} else {
-						p.skipNextSpace = true
-					}
-				} else if spacesAround(arg.Type) {
-					p.ensureSpace()
-				}
-			}
-
-			arg.Pos = token.Pos{}
-			if p.options&LowercaseKeywords > 0 && arg.Type.IsReserved() {
-				if arg.Type.IsKeyword() {
-					arg.Text = arg.Type.String()
-				} else {
-					arg.Text = strings.ToLower(arg.Text)
-				}
-			}
-			p.tokens = append(p.tokens, arg)
-
-			switch arg.Type {
-			case token.Assign:
-				if p.blockType == token.Declare {
-					p.skipNextSpace = true
-					break
-				}
-				fallthrough
-			case token.Comma:
-				p.print(space)
-			default:
-				if !p.skipNextSpace && (printSpaceAfter || spaceAfter(arg.Type)) {
-					p.print(space)
-				}
-			}
+			p.printToken(arg)
 		case token.Type:
 			if arg == token.EOF {
 				break
@@ -655,6 +174,507 @@ func (p *printer) print(args ...any) {
 				p.removeLast(space)
 			}
 			p.tokens = append(p.tokens, arg)
+		}
+	}
+}
+
+func (p *printer) printFile(arg *File) {
+	if d := arg.htmlPreamble; d != nil {
+		d.Text = strings.TrimLeft(d.Text, " \t\n")
+		p.print(*d)
+	}
+	p.print(arg.block)
+	fixed := p.removeTrailingWS()
+	if d := p.removeLast(token.InlineHTML); d != nil {
+		d := d.(token.Token)
+		d.Text = strings.TrimRight(d.Text, " \t\n")
+		p.print(d)
+	}
+	if !fixed {
+		p.print(newline)
+	}
+}
+
+func (p *printer) printBlock(arg *Block) {
+	p.lastBlock = arg.kind
+	switch arg.open {
+	case token.Lparen:
+		switch last := p.lastToken(); last {
+		case token.Rparen, token.Rbrack,
+			token.Declare, token.Class, token.Function, token.Fn:
+			p.removeTrailingWS()
+		}
+	case token.Lbrack:
+		switch last := p.lastToken(); last {
+		case token.Rparen, token.Rbrack:
+			p.removeLast(space)
+		}
+	case token.Lbrace:
+		if arg.kind == token.Lbrace {
+			// For implicit blocks, do nothing.
+			break
+		}
+		nl := p.removeTrailingWS()
+		switch arg.kind {
+		case token.Arrow, token.DoubleColon:
+		case token.OpenTag, token.Class, token.Interface, token.Trait, token.Enum,
+			token.Function:
+			if !nl {
+				p.print(newline, p.indent)
+			}
+			p.alignNextAssign = false
+		default:
+			p.print(space)
+		}
+	}
+	if arg.open != token.Lbrace && p.skipSpaceBeforeParen {
+		p.removeLast(space)
+	}
+	p.print(arg.open)
+	if arg.commentTag != nil {
+		p.print(space, *arg.commentTag)
+	}
+	if arg.open == token.OpenTag {
+		if arg.multiline {
+			p.print(newline)
+		} else {
+			p.print(nextcol)
+		}
+	}
+	if arg.indented {
+		p.indent++
+	}
+	if arg.multiline && len(arg.nodes) > 0 {
+		p.print(newline, p.indent)
+	} else if arg.oneliner() {
+		p.print(space)
+	}
+
+	backup := p.blockCtx
+	p.blockType = arg.kind
+	p.multiline = arg.multiline || arg.open == token.OpenTag
+	p.blockOpen = arg.open
+	for _, x := range arg.nodes {
+		p.print(x)
+	}
+	p.blockCtx = backup
+
+	// This prevents bad formatting of a switch stmt
+	// ending with an empty branch.
+	p.removeLast(p.indent)
+	p.removeLast(newline)
+	p.skipNextSpace = false
+
+	if arg.indented {
+		p.indent--
+	}
+
+	if arg.oneliner() {
+		p.ensureSpace()
+	} else if arg.multiline || arg.offsetEndParen {
+		if p.options&TrailingComma > 0 && arg.fixComma && len(arg.nodes) > 0 {
+			p.removeLast(space)
+			c := p.removeLast(token.Comment)
+			p.removeLast(space)
+			p.removeLast(nextcol)
+			p.removeLast(token.Comma)
+			if p.lastIsToken() {
+				p.print(token.Comma)
+			}
+			if c != nil {
+				p.print(c)
+			}
+		}
+		p.print(newline, p.indent)
+	} else {
+		p.removeLast(space)
+		p.removeLast(token.Comma)
+	}
+	if arg.kind == token.For && arg.close == token.Rparen {
+		s1 := p.removeLast(token.Semicolon)
+		s2 := p.removeLast(token.Semicolon)
+		if s2 != nil {
+			p.removeLast(space)
+			paren := p.removeLast(token.Lparen)
+			if paren != nil {
+				// This is a special case for infinite loops.
+				// Let's follow the K&R-derived style.
+				p.print(token.Token{Type: token.Lparen, Text: "(;;"})
+				s1 = nil
+			} else {
+				p.print(s2, space)
+			}
+		}
+		if s1 != nil {
+			p.print(s1)
+		}
+	}
+	p.print(arg.close)
+	if arg.close == token.Rbrace && !isFetchOperator(arg.kind) ||
+		arg.close == token.Rparen && arg.kind != token.OpenTag ||
+		arg.kind == token.Hash {
+		p.print(space)
+	}
+	p.skipSpaceBeforeParen = false
+}
+
+func (p *printer) printTernary(arg *ternaryMiddle) {
+	p.removeLast(space)
+	p.print(space, token.Qmark, space)
+	p.skipSpaceBeforeParen = false
+	hasAny := false
+	indented := false
+	for _, x := range arg.nodes {
+		tok, ok := x.(token.Token)
+		if !ok || tok.Type != token.Whitespace {
+			hasAny = true
+		} else if !indented && tok.Type == token.Whitespace &&
+			strings.Contains(tok.Text, "\n") {
+			indented = true
+			p.indent++
+			*arg.extraIndented++
+			*arg.doesContinue = true
+		}
+		p.print(x)
+	}
+	if arg.stmtAlreadyIndented {
+		if p.removeLast(p.indent) != nil {
+			p.print(p.indent - 1)
+		}
+	}
+	p.removeLast(space)
+	if hasAny {
+		p.print(space)
+	}
+	p.print(token.Colon, space)
+	p.skipSpaceBeforeParen = false
+}
+
+func (p *printer) printStmt(arg *Stmt) {
+	var extraIndented indentation
+	fatArrow := false
+	stmtReallyIndented := false
+	mightContinue := false
+	doesContinue := false
+	if arg.isLabel {
+		if p.removeLast(p.indent) != nil {
+			p.print(p.indent - 1)
+		}
+		p.indent--
+		extraIndented--
+	}
+	maxPrec := -1
+	p.maxPrec = maxPrec
+	recalcPrecAfter := false
+	hadSpecialParamChar := false
+	for index, x := range arg.nodes {
+		if maxPrec == -1 {
+			if arg.kind == token.Class || arg.kind == token.Function || arg.kind == token.Fn {
+				p.maxPrec = len(opTable)
+			} else {
+				maxPrec = p.analyseOps(arg.nodes)
+				p.maxPrec = maxPrec
+			}
+		}
+		addSpace := false
+		switch x := x.(type) {
+		case token.Token:
+			if p.skipSpaceAfterBlock {
+				p.skipSpaceAfterBlock = false
+				p.skipNextSpace = true
+			}
+			switch rest := arg.nodes[index+1:]; x.Type {
+			case token.DoubleArrow, token.Assign:
+				// With these, change the stmt kind to change
+				// handling operator spacing.
+				// TODO: Find a better solution?
+				maxPrec = -1
+				arg.kind = x.Type
+			case token.Colon:
+				p.removeLast(space)
+			case token.Not:
+				// A hack to add a space after the ! unary op,
+				// to emphasize that instanceof has a higher precedence.
+				if nextOperatorIs(rest, token.Instanceof) {
+					addSpace = true
+				}
+			case token.At:
+				// And this solves the infamous:
+				//	- 2**2
+				// and perhaps some others?
+				// The @ token represents all unary operators.
+				// See (*parser).parseStmt.
+				if nextOperatorIs(rest, token.Pow) {
+					addSpace = true
+					p.maxPrec = max(p.maxPrec, 2)
+				}
+			case token.BitAnd, token.Ellipsis:
+				hadSpecialParamChar = true
+			case token.Var:
+				if hadSpecialParamChar && arg.kind == token.Function {
+					p.removeLast(space)
+					ell := p.removeLast(token.Ellipsis)
+					p.removeLast(space)
+					amp := p.removeLast(token.BitAnd)
+					p.removeLast(space)
+					if p.lastToken() != token.Lparen {
+						p.print(space)
+					}
+					if amp != nil {
+						// Disguise the token so no blank is added after it.
+						amp := amp.(token.Token)
+						amp.Type = token.At
+						p.print(amp)
+					}
+					if ell != nil {
+						p.print(ell)
+					}
+				}
+			}
+
+			if !p.multiline {
+				if x.Type == token.Whitespace && strings.Contains(x.Text, "\n") {
+					stmtReallyIndented = true
+				}
+				p.print(x)
+				if addSpace {
+					p.print(space)
+				}
+				continue
+			}
+			switch x.Type {
+			case token.Comment:
+				if !arg.isLabel || !isLineComment(x) {
+					break
+				}
+				if p.srcIndent > p.indent {
+					p.removeLast(p.indent)
+					p.print(p.indent + 1)
+				}
+			case token.DocComment:
+			case token.Whitespace:
+				if !strings.Contains(x.Text, "\n") {
+					break
+				}
+				if fatArrow {
+					p.indent++
+					extraIndented++
+				} else if !doesContinue && mightContinue {
+					p.indent++
+					extraIndented++
+					doesContinue = true
+				}
+			case token.Colon:
+				mightContinue = false
+				if doesContinue {
+					p.indent--
+					extraIndented--
+					doesContinue = false
+				}
+			case token.DoubleArrow:
+				fatArrow = true
+			default:
+				fatArrow = false
+				mightContinue = true
+			}
+		case *ternaryMiddle:
+			p.maxPrec = p.analyseOps(x.nodes)
+			recalcPrecAfter = true
+			x.stmtAlreadyIndented = doesContinue || stmtReallyIndented
+			x.extraIndented = &extraIndented
+			x.doesContinue = &doesContinue
+		case *Block:
+			maxPrec = -1
+			if doesContinue && x.multiline && x.open == token.Lbrace {
+				p.indent--
+				extraIndented--
+				doesContinue = false
+				mightContinue = false
+			}
+		}
+		p.print(x)
+		if addSpace {
+			p.print(space)
+		}
+		if recalcPrecAfter {
+			recalcPrecAfter = false
+			maxPrec = p.analyseOps(arg.nodes[index:])
+			p.maxPrec = maxPrec
+		}
+	}
+	p.indent -= extraIndented
+	if arg.isLabel {
+		p.print(newline, p.indent)
+		p.skipNextSpace = true
+	}
+	p.alignNextAssign = false
+	switch arg.kind {
+	case token.Namespace, token.Declare:
+		p.print(newline, newline, p.indent)
+		p.skipNextSpace = true
+	}
+}
+
+func (p *printer) printToken(arg token.Token) {
+	if arg.Type == token.Whitespace {
+		if i := strings.LastIndexByte(arg.Text, '\n'); i >= 0 {
+			p.srcIndent = 0
+			for _, r := range arg.Text[i+1:] {
+				if r != '\t' {
+					break
+				}
+				p.srcIndent++
+			}
+			if p.skipNextSpace {
+				return
+			}
+			if strings.Contains(arg.Text[:i], "\n") && p.lastBlock != token.Hash {
+				p.print(newline)
+			}
+			p.print(newline, p.indent)
+		} else if !p.skipNextSpace {
+			p.removeLast(space)
+			// Do not print space after Foo::{$expr}
+			if p.lastToken() != token.Rbrace {
+				p.print(space)
+			}
+		}
+		return
+	}
+	p.skipNextSpace = false
+	p.skipSpaceBeforeParen = false
+	printSpaceAfter := false
+	switch arg.Type {
+	case token.Illegal:
+		log.Printf("WARN: unknown token: %q", arg.Text)
+	case token.OpenTag:
+		printSpaceAfter = true
+	case token.Comment:
+		if !isLineComment(arg) {
+			// TODO: Or ensure spaces around always?
+			if last := p.lastToken(); last != token.Lparen && last != token.Lbrack {
+				p.ensureSpace()
+			}
+			printSpaceAfter = true
+			break
+		}
+		if s := strings.TrimSpace(arg.Text); s == "//" &&
+			p.lastToken() != token.Comment {
+			// Ignore this one.
+			return
+		}
+		p.removeLast(space)
+		if !p.justIndented() {
+			p.print(nextcol)
+		}
+	case token.If:
+		if p.lastToken() == token.Else {
+			p.removeTrailingWS()
+		}
+	case token.Else, token.Catch, token.Finally:
+		if p.lastToken() == token.Rbrace {
+			p.removeTrailingWS()
+			p.print(space)
+		}
+	case token.Use:
+		p.removeLast(space)
+		if r := p.removeLast(token.Rparen); r != nil {
+			p.print(r, space)
+		}
+	case token.Const, token.Case:
+		p.alignNextAssign = true
+	case token.Static:
+		p.skipSpaceBeforeParen = true
+		fallthrough
+	case token.Private, token.Protected, token.Public,
+		token.Readonly, token.Final:
+		if p.blockOpen == token.Lbrace {
+			p.alignNextAssign = true
+		}
+	case token.Assign:
+		p.removeLast(space)
+		if p.alignNextAssign {
+			p.print(nextcol)
+		} else if p.blockType != token.Declare {
+			p.print(space)
+		}
+	case token.DoubleArrow:
+		p.removeLast(space)
+		if p.multiline {
+			p.print(nextcol)
+		} else {
+			p.print(space)
+		}
+	case token.Semicolon, token.Comma:
+		p.removeLast(space)
+	case token.Backslash:
+		if p.lastToken() == token.Ident {
+			p.removeLast(space)
+		}
+		p.skipNextSpace = true
+	case token.Arrow, token.QmarkArrow, token.DoubleColon:
+		p.removeLast(space)
+		fallthrough
+	case token.Qmark, token.BitNot, token.At, token.Not, token.Dollar, token.Ellipsis:
+		p.skipNextSpace = true
+	case metaTokenCast:
+		// TODO: The ] in isPostfixTarget feels like a hack.
+		if isPostfixTarget(p.lastToken()) {
+			p.removeLast(space)
+		}
+		if add, ok := p.decideOpSpaces(p.maxPrec, arg.Type); ok {
+			printSpaceAfter = add
+			p.skipNextSpace = !add
+		}
+	case token.Var:
+		if last := p.lastToken(); last == token.Ident || last == token.ReservedConst {
+			p.ensureSpace()
+		}
+		fallthrough
+	case token.Ident:
+		p.skipSpaceBeforeParen = true
+	case token.Inc, token.Dec:
+		if isPostfixTarget(p.lastToken()) {
+			p.removeLast(space)
+		} else {
+			p.skipNextSpace = true
+		}
+	default:
+		if add, ok := p.decideOpSpaces(p.maxPrec, arg.Type); ok {
+			p.removeLast(space)
+			if add {
+				p.print(space)
+				printSpaceAfter = true
+			} else {
+				p.skipNextSpace = true
+			}
+		} else if spacesAround(arg.Type) {
+			p.ensureSpace()
+		}
+	}
+
+	arg.Pos = token.Pos{}
+	if p.options&LowercaseKeywords > 0 && arg.Type.IsReserved() {
+		if arg.Type.IsKeyword() {
+			arg.Text = arg.Type.String()
+		} else {
+			arg.Text = strings.ToLower(arg.Text)
+		}
+	}
+	p.tokens = append(p.tokens, arg)
+
+	switch arg.Type {
+	case token.Assign:
+		if p.blockType == token.Declare {
+			p.skipNextSpace = true
+			break
+		}
+		fallthrough
+	case token.Comma:
+		p.print(space)
+	default:
+		if !p.skipNextSpace && (printSpaceAfter || spaceAfter(arg.Type)) {
+			p.print(space)
 		}
 	}
 }
