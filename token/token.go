@@ -219,6 +219,7 @@ type Scanner struct {
 	done      bool
 	err       error
 	identNext bool
+	lastType  Type
 
 	line, col   int
 	lastLineLen int
@@ -244,27 +245,24 @@ func (s *Scanner) Next() (tok Token) {
 
 		// PHP contexts where keywords act as identifiers:
 		//
-		//  After ->           $obj->match()            scanner (identNext)
-		//  After ?->          $obj?->match()           scanner (identNext)
-		//  After ::           self::global()           scanner (identNext)
-		//  After function     function match(){}       scanner (identNext)
-		//  After const        const match = 1          scanner (identNext)
-		//  After \            use League\Class         scanner (identNext)
-		//  After interface    interface Match {}       scanner (identNext)
-		//  After trait        trait Return {}          scanner (identNext)
-		//  After enum         enum Global {}           scanner (identNext)
-		//  After extends      class Foo extends From   scanner (identNext)
-		//  After implements   ... implements Match     scanner (identNext)
-		//  After instanceof   $x instanceof From       scanner (identNext)
-		//  Before \           namespace\Foo            scanner (peek)
-		//  After class        class From {}            parser  (lastType)
-		//  Enum case name     case FROM = 'from'       parser  (blockKind)
-		//  Attribute name     #[Private]               parser  (blockKind)
-		//  Named argument     foo(return: true)        parser  (retroactive before :)
-		//  After new          new From()               parser  (lastType)
-		//  After , in header  implements Foo, Match    parser  (lastType+kind)
+		//  All keywords → Ident:
+		//    After -> ?-> :: function \       scanner (identNext)
+		//    Before \                         scanner (peek)
+		//    Enum case / attribute name       parser  (blockKind)
+		//    Class constant name              parser  (blockKind+lastType)
+		//    Named argument  foo(return: 1)   parser  (retroactive before :)
 		//
-		// Cases 14–19 require block-level context; see naive/parse.go.
+		//  Soft keywords (enum, from) → Ident:
+		//    After type-name tokens¹          scanner (lastType)
+		//    After new / , in header          parser  (lastType)
+		//
+		//  Soft keywords → Ident:
+		//    After const                      scanner (lastType)
+		//
+		// ¹ interface, trait, enum, extends, implements, instanceof.
+		//   Exception: after class, only enum (not from) is demoted.
+		//
+		// Parser rules (4–8) require block-level context; see naive/parse.go.
 
 		if tok.Type == Whitespace || tok.Type == Comment || tok.Type == DocComment {
 			return
@@ -272,12 +270,26 @@ func (s *Scanner) Next() (tok Token) {
 		if s.identNext && tok.Type.IsReserved() {
 			tok.Type = Ident
 		}
+		switch s.lastType {
+		case Class:
+			if tok.Type == Enum {
+				tok.Type = Ident
+			}
+		case Interface, Trait, Enum, Extends, Implements, Instanceof:
+			if tok.Type == Enum || tok.Type == From {
+				tok.Type = Ident
+			}
+		case Const:
+			if tok.Type == Enum || tok.Type == From {
+				tok.Type = Ident
+			}
+		}
 		s.identNext = false
 		switch tok.Type {
-		case Arrow, QmarkArrow, DoubleColon, Function, Const, Backslash,
-			Interface, Trait, Enum, Extends, Implements, Instanceof:
+		case Arrow, QmarkArrow, DoubleColon, Function, Backslash:
 			s.identNext = true
 		}
+		s.lastType = tok.Type
 	}()
 
 	if len(s.queue) > 0 {

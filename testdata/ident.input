@@ -117,22 +117,22 @@ foo ( yield : true , clone : true , readonly : true ) ;
 foo ( and : true , or : true , xor : true ) ;
 
 // After class/interface/trait/enum: keywords as type names.
-class From { }
-interface Match { }
-trait Return { }
-enum Global : string { case A = 'a' ; }
+class Enum { }
+interface Enum { }
+trait From { }
+enum From : string { case A = 'a' ; }
 
 // After extends/implements: keywords as type names.
-class Foo extends From implements Match , Return { }
-interface Bar extends Match , From { }
+class Foo extends From implements Enum , From { }
+interface Bar extends Enum , From { }
 
 // After new: keywords as class names.
-new From ( ) ;
-new Match ;
+new Enum ( ) ;
+new From ;
 
 // After instanceof: keywords as class names.
-$x instanceof From ;
-$y instanceof Match ;
+$x instanceof Enum ;
+$y instanceof From ;
 
 // new class (anonymous class) must NOT demote.
 new class ( ) { } ;
@@ -145,12 +145,9 @@ new static ( ) ;
 $obj -> Match ( ) ;
 $obj -> FOR ;
 self :: Return ( ) ;
-class From { }
+class Enum { }
 new From ( ) ;
 AssertTag :: NULL ;
 Foo :: True ;
 $obj -> false ( ) ;
 use Foo \ NULL ;
-const NULL  = 'null' ;
-const True  = 1 ;
-const false = 2 ;

@@ -206,11 +206,14 @@ func (p *parser) parseStmt(separators ...token.Type) (s *Stmt) {
 				p.tok.Type = token.Ident
 			case p.blockKind == token.Hash && s.lastType() == token.Illegal:
 				p.tok.Type = token.Ident
-			case s.lastType() == token.New && p.tok.Type != token.Class && p.tok.Type != token.Static:
+			case (p.blockKind == token.Class || p.blockKind == token.Interface ||
+				p.blockKind == token.Trait || p.blockKind == token.Enum) &&
+				s.lastType() == token.Const:
 				p.tok.Type = token.Ident
-			case s.lastType() == token.Class && p.tok.Type != token.Extends && p.tok.Type != token.Implements:
+			case s.lastType() == token.New && (p.tok.Type == token.Enum || p.tok.Type == token.From):
 				p.tok.Type = token.Ident
-			case (s.kind == token.Class || s.kind == token.Interface) && s.lastType() == token.Comma:
+			case (s.kind == token.Class || s.kind == token.Interface) && s.lastType() == token.Comma &&
+				(p.tok.Type == token.Enum || p.tok.Type == token.From):
 				p.tok.Type = token.Ident
 			}
 		}
