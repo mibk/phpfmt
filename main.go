@@ -15,18 +15,26 @@ import (
 )
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "usage: phpfmt [-w] [path ...]\n")
+	fmt.Fprintf(os.Stderr, "usage: phpfmt [-s] [-w] [path ...]\n")
+	fmt.Fprintf(os.Stderr, "  -s	simplify code\n")
 	fmt.Fprintf(os.Stderr, "  -w	write result to (source) file instead of stdout\n")
 	os.Exit(2)
 }
 
-var inPlace = flag.Bool("w", false, "write to file")
+var (
+	inPlace  = flag.Bool("w", false, "write to file")
+	simplify = flag.Bool("s", false, "simplify code")
+)
 
 func main() {
 	log.SetPrefix("phpfmt: ")
 	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
+
+	if *simplify {
+		defaultOptions |= naive.Simplify
+	}
 
 	if flag.NArg() == 0 {
 		if *inPlace {

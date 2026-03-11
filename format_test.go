@@ -54,6 +54,8 @@ func testFmt(t *testing.T, filename string) {
 			}
 		} else if cfg == "-align" {
 			opts &= ^naive.AlignColumns
+		} else if cfg == "+simplify" {
+			opts |= naive.Simplify
 		}
 	}
 

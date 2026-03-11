@@ -31,6 +31,11 @@ const (
 	// - The concat operator (.) is formatted according to PHP 7.4 precedence rules.
 	PHP74Compat
 
+	// Simplify enables code simplification rewrites. Currently this
+	// converts double-quoted strings to single-quoted when no
+	// interpolation or special escape sequences are used.
+	Simplify
+
 	// Standard is the default, “standard” formatting style.
 	Standard = TrailingComma | AlignColumns | LowercaseKeywords
 )
@@ -654,6 +659,11 @@ func (p *printer) printToken(arg token.Token) {
 	}
 
 	arg.Pos = token.Pos{}
+	if p.options&Simplify > 0 && arg.Type == token.String && arg.Text[0] == '"' {
+		if s, ok := simplifyString(arg.Text); ok {
+			arg.Text = s
+		}
+	}
 	if p.options&LowercaseKeywords > 0 && arg.Type.IsReserved() {
 		if arg.Type.IsKeyword() {
 			arg.Text = arg.Type.String()
@@ -831,4 +841,43 @@ func spaceAfter(typ token.Type) bool {
 	default:
 		return spacesAround(typ)
 	}
+}
+
+// simplifyString converts a double-quoted PHP string to single-quoted
+// if no interpolation or special escape sequences are used.
+func simplifyString(s string) (string, bool) {
+	// s includes the outer " quotes.
+	content := s[1 : len(s)-1]
+
+	var b strings.Builder
+	b.WriteByte('\'')
+	for i := 0; i < len(content); i++ {
+		ch := content[i]
+		switch ch {
+		case '$':
+			return "", false
+		case '\\':
+			if i+1 >= len(content) {
+				return "", false
+			}
+			next := content[i+1]
+			switch next {
+			case '\\':
+				b.WriteString(`\\`)
+				i++
+			case '"':
+				b.WriteByte('"')
+				i++
+			default:
+				// Meaningful escape sequence (\n, \t, etc.)
+				return "", false
+			}
+		case '\'':
+			return "", false
+		default:
+			b.WriteByte(ch)
+		}
+	}
+	b.WriteByte('\'')
+	return b.String(), true
 }

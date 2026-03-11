@@ -1,0 +1,17 @@
+// PHP +simplify
+<?php
+
+echo "simple";
+echo "it\"s";
+echo "has $var";
+echo "has \n";
+echo "has \\";
+echo "has '";
+echo "mixed 'and' more";
+echo 'already single';
+echo <<<EOT
+heredoc
+EOT;
+echo <<<'EOT'
+nowdoc
+EOT;
