@@ -8,6 +8,13 @@ import (
 	"unicode/utf8"
 )
 
+// runeScanner is the interface used by Scanner.r.
+// Both *bufio.Reader and *bytes.Reader satisfy it.
+type runeScanner interface {
+	io.RuneReader
+	UnreadRune() error
+}
+
 type Pos struct {
 	Line, Column int
 }
@@ -87,7 +94,7 @@ const (
 const eof = -1
 
 type Scanner struct {
-	r    *bufio.Reader
+	r    runeScanner
 	done bool
 	err  error
 
@@ -96,8 +103,12 @@ type Scanner struct {
 }
 
 func NewScanner(r io.Reader) *Scanner {
+	rs, ok := r.(runeScanner)
+	if !ok {
+		rs = bufio.NewReader(r)
+	}
 	return &Scanner{
-		r:    bufio.NewReader(r),
+		r:    rs,
 		line: 1,
 		col:  1,
 	}

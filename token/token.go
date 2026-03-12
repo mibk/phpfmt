@@ -8,6 +8,13 @@ import (
 	"unicode/utf8"
 )
 
+// runeScanner is the interface used by Scanner.r.
+// Both *bufio.Reader and *bytes.Reader satisfy it.
+type runeScanner interface {
+	io.RuneReader
+	UnreadRune() error
+}
+
 type ScanError struct {
 	Pos Pos
 	Err error
@@ -213,7 +220,7 @@ const (
 type Scanner struct {
 	php74Compat bool
 
-	r         *bufio.Reader
+	r         runeScanner
 	state     uint
 	queue     []Token
 	done      bool
@@ -226,9 +233,13 @@ type Scanner struct {
 }
 
 func NewScanner(r io.Reader, php74Compat bool) *Scanner {
+	rs, ok := r.(runeScanner)
+	if !ok {
+		rs = bufio.NewReader(r)
+	}
 	return &Scanner{
 		php74Compat: php74Compat,
-		r:           bufio.NewReader(r),
+		r:           rs,
 		line:        1,
 		col:         1,
 	}
