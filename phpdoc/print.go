@@ -27,8 +27,10 @@ func Fprint(w io.Writer, node any) error {
 }
 
 type printer struct {
-	buf *bufio.Writer
-	err error // sticky
+	buf         *bufio.Writer
+	err         error // sticky
+	indent      string
+	inMultiline bool
 }
 
 type whitespace byte
@@ -47,6 +49,7 @@ func (p *printer) print(args ...any) {
 
 		switch arg := arg.(type) {
 		case *Block:
+			p.indent = arg.Indent
 			p.print(tabesc, arg.Indent, tabesc, token.OpenDoc)
 			if arg.PreferOneline && len(arg.Lines) == 1 {
 				p.print(arg.Lines[0])
@@ -137,7 +140,7 @@ func (p *printer) printLine(line Line) {
 func (p *printer) printTag(tag Tag) {
 	switch tag := tag.(type) {
 	case *ParamTag:
-		p.print("@param", nextcol, tag.Param.Type, nextcol, tag.Param)
+		p.print("@param", nextcol, tag.Param.Type, colsep(tag.Param.Type), tag.Param)
 	case *ReturnTag:
 		p.print("@return", nextcol, tag.Type)
 	case *PropertyTag:
@@ -150,7 +153,7 @@ func (p *printer) printTag(tag Tag) {
 		case tag.WriteOnly:
 			p.print("-write")
 		}
-		p.print(nextcol, tag.Type, nextcol, '$', tag.Var)
+		p.print(nextcol, tag.Type, colsep(tag.Type), '$', tag.Var)
 	case *MethodTag:
 		p.print("@method", nextcol)
 		if tag.Static {
@@ -163,7 +166,7 @@ func (p *printer) printTag(tag Tag) {
 	case *VarTag:
 		p.print("@var", nextcol, tag.Type)
 		if tag.Var != "" {
-			p.print(nextcol, '$', tag.Var)
+			p.print(colsep(tag.Type), '$', tag.Var)
 		}
 	case *ThrowsTag:
 		p.print("@throws", nextcol, tag.Class)
@@ -179,7 +182,7 @@ func (p *printer) printTag(tag Tag) {
 			p.print(" of ", tag.Bound)
 		}
 	case *TypeDefTag:
-		p.print("@phpstan-type", nextcol, tag.Name, nextcol, tag.Type)
+		p.print("@phpstan-type", nextcol, tag.Name, colsep(tag.Type), tag.Type)
 	case *OtherTag:
 		p.print('@', tag.Name)
 	default:
@@ -188,6 +191,28 @@ func (p *printer) printTag(tag Tag) {
 	if desc := tag.desc(); desc != "" {
 		p.print(nextcol, tabesc, desc, tabesc)
 	}
+}
+
+// colsep returns a space when the type is multiline (since the tabwriter
+// column boundary would land inside the multiline output), or nextcol
+// otherwise so that the following field aligns in a tab column.
+func colsep(t phptype.Type) any {
+	if typeIsMultiline(t) {
+		return ' '
+	}
+	return nextcol
+}
+
+func typeIsMultiline(t phptype.Type) bool {
+	switch t := t.(type) {
+	case *phptype.ArrayShape:
+		return t.Multiline
+	case *phptype.ObjectShape:
+		return t.Multiline
+	case *phptype.Callable:
+		return t.Multiline
+	}
+	return false
 }
 
 func (p *printer) printPHPType(typ phptype.Type) {
@@ -215,7 +240,18 @@ func (p *printer) printPHPType(typ phptype.Type) {
 	case *phptype.Callable:
 		p.print(typ.Name)
 		if len(typ.Params) > 0 || typ.Result != nil {
-			p.print(typ.Params)
+			p.printDelimited(typ.Multiline, token.Lparen, token.Rparen, len(typ.Params), func(i int) {
+				par := typ.Params[i]
+				if par.Type != nil {
+					p.print(par.Type)
+					if par.Name != "" {
+						p.print(' ')
+					}
+				}
+				if par.Name != "" {
+					p.print(par)
+				}
+			})
 			if typ.Result != nil {
 				p.print(token.Colon, ' ', typ.Result)
 			}
@@ -228,11 +264,8 @@ func (p *printer) printPHPType(typ phptype.Type) {
 			}
 			break
 		}
-		p.print(token.Lbrace)
-		for i, elem := range typ.Elems {
-			if i > 0 {
-				p.print(token.Comma, ' ')
-			}
+		p.printDelimited(typ.Multiline, token.Lbrace, token.Rbrace, len(typ.Elems), func(i int) {
+			elem := typ.Elems[i]
 			if elem.Key != "" {
 				p.print(elem.Key)
 				if elem.Optional {
@@ -241,25 +274,20 @@ func (p *printer) printPHPType(typ phptype.Type) {
 				p.print(token.Colon, ' ')
 			}
 			p.print(elem.Type)
-		}
-		p.print(token.Rbrace)
+		})
 	case *phptype.ObjectShape:
 		p.print(token.Object)
 		if len(typ.Elems) == 0 {
 			break
 		}
-		p.print(token.Lbrace)
-		for i, elem := range typ.Elems {
-			if i > 0 {
-				p.print(token.Comma, ' ')
-			}
+		p.printDelimited(typ.Multiline, token.Lbrace, token.Rbrace, len(typ.Elems), func(i int) {
+			elem := typ.Elems[i]
 			p.print(elem.Key)
 			if elem.Optional {
 				p.print(token.Qmark)
 			}
 			p.print(token.Colon, ' ', elem.Type)
-		}
-		p.print(token.Rbrace)
+		})
 	case *phptype.Generic:
 		p.print(typ.Base, token.Lt)
 		for i, typ := range typ.TypeParams {
@@ -295,5 +323,28 @@ func (p *printer) printPHPType(typ phptype.Type) {
 		p.print(token.Rparen)
 	default:
 		panic(fmt.Sprintf("unknown PHP type %T", typ))
+	}
+}
+
+func (p *printer) printDelimited(multiline bool, open, close token.Type, n int, printElem func(i int)) {
+	if multiline && !p.inMultiline {
+		p.inMultiline = true
+		p.print(open, newline)
+		for i := range n {
+			p.print(tabesc, p.indent, " *     ", tabesc)
+			printElem(i)
+			p.print(token.Comma, newline)
+		}
+		p.print(tabesc, p.indent, " * ", tabesc, close)
+		p.inMultiline = false
+	} else {
+		p.print(open)
+		for i := range n {
+			if i > 0 {
+				p.print(token.Comma, ' ')
+			}
+			printElem(i)
+		}
+		p.print(close)
 	}
 }

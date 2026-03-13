@@ -43,7 +43,8 @@ type Nullable struct {
 // in the ordered-map mode.
 type ArrayShape struct {
 	typ
-	Elems []*ArrayElem // nil = bare array; non-nil empty = array{}
+	Elems     []*ArrayElem // nil = bare array; non-nil empty = array{}
+	Multiline bool
 }
 
 // An ArrayElem represents a key-value element of ArrayShape.
@@ -56,7 +57,8 @@ type ArrayElem struct {
 // An ObjectShape represents the structure of \stdClass.
 type ObjectShape struct {
 	typ
-	Elems []*ObjectElem
+	Elems     []*ObjectElem
+	Multiline bool
 }
 
 // An ObjectElem represents a key-value element of ObjectShape.
@@ -106,9 +108,10 @@ type Param struct {
 
 type Callable struct {
 	typ
-	Name   string // "callable", "Closure", or "\Closure"
-	Params []*Param
-	Result Type
+	Name      string // "callable", "Closure", or "\Closure"
+	Params    []*Param
+	Result    Type
+	Multiline bool
 }
 
 // Conditional represents a PHPStan/Psalm conditional return type,

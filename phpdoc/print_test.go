@@ -281,6 +281,90 @@ It's	deprecated now.
  * @param Closure                          $cb
  */
 `},
+	{"multiline phpstan-type", `
+/**
+ * @phpstan-type Foo = array{
+ *     name: string,
+ *     age: int,
+ * }
+ */
+----
+/**
+ * @phpstan-type Foo array{
+ *     name: string,
+ *     age: int,
+ * }
+ */
+`},
+	{"multiline param generic", `
+/**
+ * @param array<
+ *     string,
+ *     int
+ * > $x
+ */
+----
+/**
+ * @param array<string, int> $x
+ */
+`},
+	{"multiline callable", `
+/**
+ * @param callable(
+ *     string $a,
+ *     int $b,
+ * ): void $fn
+ */
+----
+/**
+ * @param callable(
+ *     string $a,
+ *     int $b,
+ * ): void $fn
+ */
+`},
+	{"nested multiline", `
+/**
+ * @phpstan-type Config = array{
+ *     items: array<
+ *         string,
+ *         array{id: int, name: string}
+ *     >,
+ *     count: int,
+ * }
+ */
+----
+/**
+ * @phpstan-type Config array{
+ *     items: array<string, array{id: int, name: string}>,
+ *     count: int,
+ * }
+ */
+`},
+	{"multiline object shape", `
+/**
+ * @var object{
+ *     name: string,
+ *     age?: int,
+ * }
+ */
+----
+/**
+ * @var object{
+ *     name: string,
+ *     age?: int,
+ * }
+ */
+`},
+	{"single-line stays single-line", `
+/**
+ * @param array{name: string, age: int} $x
+ */
+----
+/**
+ * @param array{name: string, age: int} $x
+ */
+`},
 	{"conditional types", `
 /**
 @return  ( $size  is   positive-int  ?  non-empty-array  :  array )

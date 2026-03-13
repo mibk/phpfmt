@@ -22,10 +22,12 @@ func (e *SyntaxError) Error() string {
 type parser struct {
 	scan *token.Scanner
 
-	err  error
-	tok  token.Token
-	prev token.Token
-	alt  *token.Token // on backup
+	err            error
+	tok            token.Token
+	prev           token.Token
+	alt            *token.Token // on backup
+	depth          int
+	skippedNewline bool
 }
 
 // Parse parses a single PHPDoc comment.
@@ -59,26 +61,48 @@ func (p *parser) next0() {
 	p.tok = p.scan.Next()
 }
 
-// next is like next0 but skips whitespace.
+// next is like next0 but skips whitespace. When inside balanced
+// delimiters (depth > 0), it also skips newline continuation patterns
+// (newline + optional whitespace + optional asterisk + optional whitespace).
 func (p *parser) next() {
 	p.prev = p.tok
+	p.skippedNewline = false
 	p.next0()
 	p.consume(token.Whitespace)
+	for p.depth > 0 && p.tok.Type == token.Newline {
+		p.skippedNewline = true
+		p.next0()
+		p.consume(token.Whitespace, token.Asterisk, token.Whitespace)
+	}
 }
 
 func (p *parser) expect(typ token.Type) {
 	if p.tok.Type != typ {
 		p.errorf("expecting %v, found %v", typ, p.tok)
+	} else {
+		p.trackDepth(typ)
 	}
 	p.next()
 }
 
 func (p *parser) got(typ token.Type) bool {
 	if p.tok.Type == typ {
+		p.trackDepth(typ)
 		p.next()
 		return true
 	}
 	return false
+}
+
+func (p *parser) trackDepth(typ token.Type) {
+	switch typ {
+	case token.Lparen, token.Lbrace, token.Lt:
+		p.depth++
+	case token.Rparen, token.Rbrace, token.Gt:
+		if p.depth > 0 {
+			p.depth--
+		}
+	}
 }
 
 func (p *parser) consume(types ...token.Type) {
@@ -525,6 +549,7 @@ func (p *parser) parseCallableType(name string) phptype.Type {
 	if !p.got(token.Lparen) {
 		return typ
 	}
+	typ.Multiline = p.skippedNewline
 	typ.Params = p.parseParamList()
 	if p.got(token.Colon) {
 		typ.Result = p.parseType()
@@ -588,6 +613,7 @@ func (p *parser) parseParam(needVar bool) *phptype.Param {
 func (p *parser) parseArrayShapeType() phptype.Type {
 	typ := new(phptype.ArrayShape)
 	if p.got(token.Lbrace) {
+		typ.Multiline = p.skippedNewline
 		typ.Elems = []*phptype.ArrayElem{}
 	Elems:
 		for {
@@ -627,6 +653,7 @@ func (p *parser) parseArrayShapeType() phptype.Type {
 func (p *parser) parseObjectShapeType() phptype.Type {
 	typ := new(phptype.ObjectShape)
 	if p.got(token.Lbrace) {
+		typ.Multiline = p.skippedNewline
 	Elems:
 		for {
 			elem := new(phptype.ObjectElem)
