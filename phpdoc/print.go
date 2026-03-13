@@ -258,13 +258,21 @@ func (p *printer) printPHPType(typ phptype.Type) {
 		}
 	case *phptype.ArrayShape:
 		p.print(token.Array)
-		if len(typ.Elems) == 0 {
+		if len(typ.Elems) == 0 && !typ.Variadic {
 			if typ.Elems != nil {
 				p.print(token.Lbrace, token.Rbrace)
 			}
 			break
 		}
-		p.printDelimited(typ.Multiline, token.Lbrace, token.Rbrace, len(typ.Elems), func(i int) {
+		n := len(typ.Elems)
+		if typ.Variadic {
+			n++
+		}
+		p.printDelimited(typ.Multiline, token.Lbrace, token.Rbrace, n, func(i int) {
+			if i == len(typ.Elems) {
+				p.print(token.Ellipsis)
+				return
+			}
 			elem := typ.Elems[i]
 			if elem.Key != "" {
 				p.print(elem.Key)

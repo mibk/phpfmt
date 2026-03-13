@@ -165,6 +165,23 @@ func TestParsingTypes(t *testing.T) {
 			}},
 		},
 		{
+			typ: `array{name: string, age: int, ...}`,
+			want: &arrayShape{
+				Elems: []*arrayElem{
+					{Key: "name", Type: &named{Parts: parts("string")}},
+					{Key: "age", Type: &named{Parts: parts("int")}},
+				},
+				Variadic: true,
+			},
+		},
+		{
+			typ: `array{...}`,
+			want: &arrayShape{
+				Elems: []*arrayElem{},
+				Variadic: true,
+			},
+		},
+		{
 			typ: `class-string<T>`,
 			want: &generic{
 				Base:       &named{Parts: parts("class-string")},

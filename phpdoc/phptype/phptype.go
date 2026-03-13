@@ -45,6 +45,7 @@ type ArrayShape struct {
 	typ
 	Elems     []*ArrayElem // nil = bare array; non-nil empty = array{}
 	Multiline bool
+	Variadic  bool // trailing ...
 }
 
 // An ArrayElem represents a key-value element of ArrayShape.

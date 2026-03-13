@@ -115,6 +115,17 @@ It's	deprecated now.
  * @return array{int, ?string}
  */
 `},
+	{"variadic array shapes", `
+/**
+@var  array{name :string, age: int,...}
+@var array{ ... }
+*/
+----
+/**
+ * @var array{name: string, age: int, ...}
+ * @var array{...}
+ */
+`},
 	{"object shapes", `
 /**
 @var  object   {name :string ,role  ?: int ,}
@@ -294,6 +305,23 @@ It's	deprecated now.
  *     name: string,
  *     age: int,
  * }
+ */
+`},
+	{"multiline variadic array shape", `
+/**
+ * @param array{
+ *     name: string,
+ *     age: int,
+ *     ...,
+ * } $data
+ */
+----
+/**
+ * @param array{
+ *     name: string,
+ *     age: int,
+ *     ...,
+ * } $data
  */
 `},
 	{"multiline param generic", `

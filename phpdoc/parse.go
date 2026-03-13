@@ -619,6 +619,11 @@ func (p *parser) parseArrayShapeType() phptype.Type {
 		for {
 			elem := new(phptype.ArrayElem)
 			switch p.tok.Type {
+			case token.Ellipsis:
+				typ.Variadic = true
+				p.next()
+				p.got(token.Comma)
+				break Elems
 			case token.String, token.Ident, token.Int:
 				elem.Key = p.tok.Text
 				p.next()
