@@ -126,6 +126,7 @@ type printer struct {
 	alignNextAssign      bool
 	skipNextSpace        bool
 	skipSpaceBeforeParen bool
+	ensureBlankLine      bool
 
 	maxPrec             int
 	skipSpaceAfterBlock bool
@@ -259,7 +260,35 @@ func (p *printer) printBlock(arg *Block) {
 	p.blockType = arg.kind
 	p.multiline = arg.multiline || arg.open == token.OpenTag
 	p.blockOpen = arg.open
-	for _, x := range arg.nodes {
+	isClassLike := arg.kind == token.Class || arg.kind == token.Interface ||
+		arg.kind == token.Trait || arg.kind == token.Enum
+	// Pre-compute which statements need a blank line before them.
+	var blankBefore []bool
+	if isClassLike {
+		blankBefore = make([]bool, len(arg.nodes))
+		var prevCat memberCat
+		for i, x := range arg.nodes {
+			cat := classMemberCat(x)
+			if cat == catUnknown {
+				continue
+			}
+			if prevCat != catUnknown && (cat != prevCat || cat == catMethod) {
+				// Find the first stmt at or after prevCat's position
+				// that should get the blank line. Walk back from i
+				// to find the first unknown stmt in this group.
+				j := i
+				for j > 0 && classMemberCat(arg.nodes[j-1]) == catUnknown {
+					j--
+				}
+				blankBefore[j] = true
+			}
+			prevCat = cat
+		}
+	}
+	for i, x := range arg.nodes {
+		if isClassLike && blankBefore[i] {
+			p.ensureBlankLine = true
+		}
 		p.print(x)
 	}
 	p.blockCtx = backup
@@ -533,9 +562,14 @@ func (p *printer) printToken(arg token.Token) {
 			if p.skipNextSpace {
 				return
 			}
-			if strings.Contains(arg.Text[:i], "\n") && p.lastBlock != token.Hash {
+			hasBlank := strings.Contains(arg.Text[:i], "\n")
+			if hasBlank && p.lastBlock != token.Hash {
 				p.print(newline)
 			}
+			if p.ensureBlankLine && !hasBlank {
+				p.print(newline)
+			}
+			p.ensureBlankLine = false
 			p.print(newline, p.indent)
 		} else if !p.skipNextSpace {
 			p.removeLast(space)
@@ -841,6 +875,44 @@ func spaceAfter(typ token.Type) bool {
 	default:
 		return spacesAround(typ)
 	}
+}
+
+type memberCat int
+
+const (
+	catUnknown  memberCat = iota
+	catUse
+	catConst
+	catProperty
+	catMethod
+)
+
+// classMemberCat classifies a class member statement.
+func classMemberCat(s *Stmt) memberCat {
+	for _, n := range s.nodes {
+		switch n := n.(type) {
+		case token.Token:
+			switch n.Type {
+			case token.Whitespace, token.DocComment, token.Comment:
+				continue
+			case token.Use:
+				return catUse
+			case token.Const:
+				return catConst
+			case token.Function, token.Fn:
+				return catMethod
+			case token.Var:
+				return catProperty
+			}
+		case *Block:
+			if n.kind == token.Hash {
+				continue
+			}
+			// e.g. abstract $prop { get; }
+			return catProperty
+		}
+	}
+	return catUnknown
 }
 
 // simplifyString converts a double-quoted PHP string to single-quoted

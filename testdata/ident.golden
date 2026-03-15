@@ -54,42 +54,55 @@ class MethodNames
 	function match()
 	{
 	}
+
 	function global()
 	{
 	}
+
 	function default()
 	{
 	}
+
 	function for()
 	{
 	}
+
 	function return()
 	{
 	}
+
 	function static()
 	{
 	}
+
 	function if()
 	{
 	}
+
 	function enum()
 	{
 	}
+
 	function fn()
 	{
 	}
+
 	function throw()
 	{
 	}
+
 	function readonly()
 	{
 	}
+
 	function and()
 	{
 	}
+
 	function or()
 	{
 	}
+
 	function xor()
 	{
 	}

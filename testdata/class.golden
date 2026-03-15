@@ -3,6 +3,7 @@
 class AAAClass extends \BaseClass implements Traversable
 {
 	use \ThatTrait;
+
 	const trait = 'trait';
 
 	private $a;

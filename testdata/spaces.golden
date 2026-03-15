@@ -162,7 +162,8 @@ class Baz
 	readonly $dddd = 1;
 	static $eeeee  = 1;
 	final $fffff   = 1;
-	const GGGGG    = 1;
+
+	const GGGGG = 1;
 }
 
 Foo::{$x->method}(...$args);
