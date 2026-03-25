@@ -5,8 +5,8 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/mibk/phpfmt)](https://golang.org)
 [![License](https://img.shields.io/github/license/mibk/phpfmt)](LICENSE)
 
-> **TL;DR**	Run `phpfmt -w .` and stop arguing about code style. \
-> **Status**	Beta – already production-ready for many teams,
+> **TL;DR** — Run `phpfmt -w .` and stop arguing about code style. \
+> **Status** — Beta – already production-ready for many teams,
 > but we still expect to receive reports of edge cases.
 
 ## Why `phpfmt`?
@@ -15,8 +15,8 @@
     so you never waste time on bikeshedding.
  2. **Fast & memory-safe** – written in Go,
     typically formats thousands of lines in a fraction of a second.
- 3. **Up-to-date PHP** – full syntax support for PHP 5.6 → 8.4
-    (includes enums, attributes, readonly, etc.).
+ 3. **Up-to-date PHP** – full syntax support for PHP 5.6 → 8.5
+    (includes enums, attributes, readonly, pipe operator, etc.).
  4. **Tabs over spaces** – indentation is done with hard tabs only.
     *(Yes, we know.)*
  5. **Neat column alignment** – e.g., key ⇒ value array literals
@@ -24,12 +24,7 @@
 
 ## Installation
 
-For now, the Go toolchain is required to install `phpfmt`.
-You do not need Go for anything other than the one-time installation.
-
-If you don't have Go installed, follow the instructions on the [official Go website](https://go.dev/dl/).
-
-Then, run the following command to install `phpfmt`:
+Requires the [Go toolchain](https://go.dev/dl/) (only for installation):
 
     go install mibk.dev/phpfmt@latest
 
@@ -46,6 +41,10 @@ Format and overwrite a file in-place:
 Format all PHP files in the current directory and its subdirectories:
 
     phpfmt -w .
+
+Apply code simplifications (e.g. normalize string quoting):
+
+    phpfmt -s -w .
 
 ## Precedence-aware operator spacing
 
